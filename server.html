@@ -33,6 +33,60 @@
             background: var(--bg-color);
             color: var(--text-color);
             line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Message Container - Fixed at top */
+        .message-container {
+            position: fixed;
+            top: 80px;
+            left: 0;
+            right: 0;
+            z-index: 1500;
+            padding: 0 1rem;
+            pointer-events: none;
+        }
+
+        .message {
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            animation: slideDown 0.3s ease;
+            pointer-events: auto;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .header {
@@ -52,11 +106,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 2rem;
+            padding: 0 1rem;
         }
 
         .logo {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: bold;
             text-decoration: none;
             color: white;
@@ -64,8 +118,9 @@
 
         .nav-menu {
             display: flex;
-            gap: 2rem;
+            gap: 1rem;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .nav-item {
@@ -74,6 +129,7 @@
             padding: 0.5rem 1rem;
             border-radius: 25px;
             transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
 
         .nav-item:hover {
@@ -89,6 +145,7 @@
             border-radius: 20px;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
 
         .main-container {
@@ -105,6 +162,7 @@
             position: fixed;
             height: calc(100vh - 80px);
             overflow-y: auto;
+            transition: transform 0.3s ease;
         }
 
         .sidebar-menu {
@@ -398,6 +456,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 1rem;
         }
 
         .modal-content {
@@ -405,7 +464,7 @@
             border-radius: 20px;
             padding: 2rem;
             max-width: 800px;
-            width: 90%;
+            width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             animation: slideIn 0.3s ease;
@@ -429,6 +488,7 @@
             font-size: 1.5rem;
             cursor: pointer;
             color: #999;
+            padding: 0.5rem;
         }
 
         .form-group {
@@ -459,54 +519,6 @@
         .form-textarea {
             resize: vertical;
             min-height: 100px;
-        }
-
-        .order-details {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .order-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .order-item:last-child {
-            border-bottom: none;
-        }
-
-        .order-item-image {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .order-item-info {
-            flex: 1;
-        }
-
-        .order-item-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .order-item-details {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .receipt-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-            margin-top: 1rem;
-            cursor: pointer;
         }
 
         .search-filter {
@@ -564,31 +576,6 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        .message {
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .message.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
         .chart-container {
             background: white;
             border-radius: 10px;
@@ -634,10 +621,82 @@
             flex-wrap: wrap;
         }
 
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .order-item-info {
+            flex: 1;
+        }
+
+        .order-item-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .order-item-details {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .receipt-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
         @media (max-width: 1024px) {
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
+                z-index: 1100;
             }
 
             .sidebar.open {
@@ -650,6 +709,10 @@
 
             .stats-grid {
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .mobile-menu-toggle {
+                display: block;
             }
         }
 
@@ -681,15 +744,58 @@
 
             .modal-content {
                 padding: 1rem;
+                margin: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stat-card {
+                padding: 1.5rem;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .section-title {
+                font-size: 1.2rem;
+            }
+
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 0.5rem;
+                font-size: 0.8rem;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Message Container -->
+    <div class="message-container" id="messageContainer"></div>
+
     <!-- Header -->
     <header class="header">
         <div class="nav-container">
-            <a href="index.html" class="logo" data-en="Myanmar Mall Admin" data-my="မြန်မာ မော်လ် စီမံခန့်ခွဲမှု">မြန်မ��� မော်လ် စီမံခန့်ခွဲမှု</a>
+            <a href="index.html" class="logo" data-en="Myanmar Mall Admin" data-my="မြန်မာ မော်လ် စီမံခန့်ခွဲမှု">မြန်မာ မော်လ် စီမံခန့်ခွဲမှု</a>
+            <button class="mobile-menu-toggle" onclick="toggleSidebar()">☰</button>
             <nav class="nav-menu">
                 <a href="index.html" class="nav-item" data-en="Website" data-my="ဝက်ဘ်ဆိုက်">ဝက်ဘ်ဆိုက်</a>
                 <a href="upload.html" class="nav-item" data-en="Upload" data-my="တင်ရန်">တင်ရန်</a>
@@ -701,7 +807,7 @@
     <!-- Main Container -->
     <div class="main-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
                     <a href="#" class="sidebar-link active" onclick="showSection('dashboard')" data-en="Dashboard" data-my="ဒက်ရှ်ဘုတ်">
@@ -948,11 +1054,16 @@
     </div>
 
     <script>
-        // Supabase Configuration
-        const SUPABASE_URL = 'https://uwuztdwbjwkuoqmclcpq.supabase.co'; // Replace with your Supabase URL
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3dXp0ZHdiandrdW9xbWNsY3BxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDc3MzIsImV4cCI6MjA2MzUyMzczMn0.79WzYhDz-v80SbhOWEIegtSJKO6AtBcLN5REasUz1CI'; // Replace with your Supabase Anon Key
+        // Supabase Configuration - Replace with your actual values
+        const SUPABASE_URL = 'https://uwuztdwbjwkuoqmclcpq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3dXp0ZHdiandrdW9xbWNsY3BxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDc3MzIsImV4cCI6MjA2MzUyMzczMn0.79WzYhDz-v80SbhOWEIegtSJKO6AtBcLN5REasUz1CI';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabase = null;
+        
+        // Initialize Supabase only if credentials are provided
+        if (SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
 
         // Global Variables
         let currentLanguage = 'my';
@@ -971,6 +1082,12 @@
             setupRealtimeSubscriptions();
         });
 
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
         // Navigation Functions
         function showSection(sectionName) {
             // Update sidebar active state
@@ -987,6 +1104,9 @@
             // Show selected section
             document.getElementById(sectionName + 'Section').classList.add('active');
             currentSection = sectionName;
+
+            // Close mobile sidebar
+            document.getElementById('sidebar').classList.remove('open');
 
             // Load section data
             switch(sectionName) {
@@ -1017,7 +1137,6 @@
         // Dashboard Functions
         async function loadDashboardData() {
             try {
-                // Load stats
                 await Promise.all([
                     loadStats(),
                     loadRecentOrders()
@@ -1028,6 +1147,15 @@
         }
 
         async function loadStats() {
+            if (!supabase) {
+                // Load sample stats if no database connection
+                document.getElementById('totalOrders').textContent = '25';
+                document.getElementById('totalRevenue').textContent = formatPrice(15000000);
+                document.getElementById('totalUsers').textContent = '150';
+                document.getElementById('totalProducts').textContent = '45';
+                return;
+            }
+
             try {
                 // Get orders count and revenue
                 const { data: orders, error: ordersError } = await supabase
@@ -1073,10 +1201,26 @@
 
             } catch (error) {
                 console.error('Error loading stats:', error);
+                showMessage('error', 'စာရင်းအင်း ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load statistics');
             }
         }
 
         async function loadRecentOrders() {
+            if (!supabase) {
+                // Load sample orders if no database connection
+                const sampleOrders = [
+                    {
+                        id: 1,
+                        total_amount: 150000,
+                        status: 'pending',
+                        created_at: new Date().toISOString(),
+                        users: { full_name: 'Sample User', email: 'user@example.com' }
+                    }
+                ];
+                displayRecentOrders(sampleOrders);
+                return;
+            }
+
             try {
                 const { data, error } = await supabase
                     .from('orders')
@@ -1092,6 +1236,7 @@
                 displayRecentOrders(data || []);
             } catch (error) {
                 console.error('Error loading recent orders:', error);
+                showMessage('error', 'လတ်တလော မှာယူမှုများ ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load recent orders');
             }
         }
 
@@ -1099,7 +1244,12 @@
             const container = document.getElementById('recentOrdersTable');
             
             if (orders.length === 0) {
-                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'မှာယူမှု မရှိသေးပါ' : 'No orders yet'}</p>`;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>${currentLanguage === 'my' ? 'မှာယူမှု မရှိသေးပါ' : 'No orders yet'}</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -1140,6 +1290,11 @@
 
         // Orders Functions
         async function loadOrders() {
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 showLoading('ordersTable');
 
@@ -1165,7 +1320,12 @@
             const container = document.getElementById('ordersTable');
             
             if (orders.length === 0) {
-                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'မှာယူမှု မရှိသေးပါ' : 'No orders found'}</p>`;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>${currentLanguage === 'my' ? 'မှာယူမှု မရှိသေးပါ' : 'No orders found'}</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -1226,6 +1386,11 @@
 
         // Products Functions
         async function loadProducts() {
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 showLoading('productsTable');
 
@@ -1248,7 +1413,12 @@
             const container = document.getElementById('productsTable');
             
             if (products.length === 0) {
-                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'ပစ္စည်း မရှိသေးပါ' : 'No products found'}</p>`;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛍️</div>
+                        <p>${currentLanguage === 'my' ? 'ပစ္စည်း မရှိသေးပါ' : 'No products found'}</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -1270,7 +1440,7 @@
                     ${products.map(product => `
                         <tr>
                             <td>
-                                <img src="${product.image_url}" alt="${product.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                                <img src="${product.image_url}" alt="${product.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.src='/placeholder.svg?height=50&width=50'">
                             </td>
                             <td>
                                 <div style="font-weight: 600;">${currentLanguage === 'my' ? product.title : (product.title_en || product.title)}</div>
@@ -1301,6 +1471,11 @@
 
         // Users Functions
         async function loadUsers() {
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 showLoading('usersTable');
 
@@ -1323,7 +1498,12 @@
             const container = document.getElementById('usersTable');
             
             if (users.length === 0) {
-                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'အသုံးပြုသူ မရှိသေးပါ' : 'No users found'}</p>`;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👥</div>
+                        <p>${currentLanguage === 'my' ? 'အသုံးပြုသူ မရှိသေးပါ' : 'No users found'}</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -1366,6 +1546,11 @@
 
         // Refunds Functions
         async function loadRefunds() {
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 showLoading('refundsTable');
 
@@ -1391,7 +1576,12 @@
             const container = document.getElementById('refundsTable');
             
             if (refunds.length === 0) {
-                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'ငွေပြန်အမ်းမှု မရှိသေးပါ' : 'No refunds found'}</p>`;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💰</div>
+                        <p>${currentLanguage === 'my' ? 'ငွေပြန်အမ်းမှု မရှိသေးပါ' : 'No refunds found'}</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -1454,6 +1644,12 @@
         }
 
         async function loadSalesChart() {
+            if (!supabase) {
+                // Load sample chart data
+                loadSampleSalesChart();
+                return;
+            }
+
             try {
                 const { data, error } = await supabase
                     .from('orders')
@@ -1501,10 +1697,47 @@
                 });
             } catch (error) {
                 console.error('Error loading sales chart:', error);
+                loadSampleSalesChart();
             }
         }
 
+        function loadSampleSalesChart() {
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            
+            if (salesChart) {
+                salesChart.destroy();
+            }
+
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: currentLanguage === 'my' ? 'ရောင်းအား (ကျပ်)' : 'Sales (MMK)',
+                        data: [1200000, 1900000, 3000000, 5000000, 2000000, 3000000],
+                        borderColor: '#ff6b35',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
         async function loadOrderStatusChart() {
+            if (!supabase) {
+                // Load sample chart data
+                loadSampleOrderStatusChart();
+                return;
+            }
+
             try {
                 const { data, error } = await supabase
                     .from('orders')
@@ -1548,11 +1781,47 @@
                 });
             } catch (error) {
                 console.error('Error loading order status chart:', error);
+                loadSampleOrderStatusChart();
             }
+        }
+
+        function loadSampleOrderStatusChart() {
+            const ctx = document.getElementById('orderStatusChart').getContext('2d');
+            
+            if (orderStatusChart) {
+                orderStatusChart.destroy();
+            }
+
+            orderStatusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        currentLanguage === 'my' ? 'စောင့်ဆိုင်းနေသည်' : 'Pending',
+                        currentLanguage === 'my' ? 'အတည်ပြုပြီး' : 'Approved',
+                        currentLanguage === 'my' ? 'ငြင်းပယ်ပြီး' : 'Rejected'
+                    ],
+                    datasets: [{
+                        data: [15, 45, 5],
+                        backgroundColor: [
+                            '#ffc107',
+                            '#28a745',
+                            '#dc3545'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
         }
 
         // Posts Functions
         async function loadPosts() {
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 showLoading('postsTable');
 
@@ -1575,7 +1844,12 @@
             const container = document.getElementById('postsTable');
             
             if (posts.length === 0) {
-                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'ပို့စ် မရှိသေးပါ' : 'No posts found'}</p>`;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <p>${currentLanguage === 'my' ? 'ပို့စ် မရှိသေးပါ' : 'No posts found'}</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -1599,7 +1873,7 @@
                                 ${post.media_url ? `
                                     ${post.media_type === 'video' ? 
                                         `<video src="${post.media_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" muted></video>` :
-                                        `<img src="${post.media_url}" alt="${post.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">`
+                                        `<img src="${post.media_url}" alt="${post.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" onerror="this.src='/placeholder.svg?height=50&width=50'">`
                                     }
                                 ` : 'N/A'}
                             </td>
@@ -1634,6 +1908,11 @@
 
         // Order Management Functions
         async function viewOrderDetails(orderId) {
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 const { data, error } = await supabase
                     .from('orders')
@@ -1670,7 +1949,7 @@
                             <strong>${currentLanguage === 'my' ? 'မှာယူထားသော ပစ္စည်းများ:' : 'Ordered Items:'}</strong>
                             ${data.items.map(item => `
                                 <div class="order-item">
-                                    <img src="${item.image_url}" alt="${item.title}" class="order-item-image">
+                                    <img src="${item.image_url}" alt="${item.title}" class="order-item-image" onerror="this.src='/placeholder.svg?height=60&width=60'">
                                     <div class="order-item-info">
                                         <div class="order-item-title">${item.title}</div>
                                         <div class="order-item-details">
@@ -1686,7 +1965,7 @@
                         ${data.receipt_url ? `
                             <div style="margin: 1rem 0;">
                                 <strong>${currentLanguage === 'my' ? 'ငွေလွှဲပြေစာ:' : 'Payment Receipt:'}</strong><br>
-                                <img src="${data.receipt_url}" alt="Receipt" class="receipt-image" onclick="window.open('${data.receipt_url}', '_blank')">
+                                <img src="${data.receipt_url}" alt="Receipt" class="receipt-image" onclick="window.open('${data.receipt_url}', '_blank')" onerror="this.style.display='none'">
                             </div>
                         ` : ''}
                         ${data.status === 'pending' ? `
@@ -1710,6 +1989,11 @@
         }
 
         async function approveOrder(orderId) {
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 const { error } = await supabase
                     .from('orders')
@@ -1731,6 +2015,11 @@
             const reason = prompt(currentLanguage === 'my' ? 'ငြင်းပယ်ရန် အကြောင်းရင်း ရေးပါ:' : 'Please enter rejection reason:');
             
             if (!reason) return;
+
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
 
             try {
                 const { error } = await supabase
@@ -1754,6 +2043,11 @@
 
         // Refund Management Functions
         async function processRefund(orderId) {
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 const { data, error } = await supabase
                     .from('orders')
@@ -1831,6 +2125,11 @@
                 return;
             }
 
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 // Upload refund receipt
                 const fileExt = receiptFile.name.split('.').pop();
@@ -1879,6 +2178,11 @@
                 return;
             }
 
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 const { error } = await supabase
                     .from('products')
@@ -1907,6 +2211,11 @@
                 return;
             }
 
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 const { error } = await supabase
                     .from('posts')
@@ -1925,6 +2234,11 @@
 
         // User Management Functions
         async function viewUserDetails(userId) {
+            if (!supabase) {
+                showMessage('error', 'Supabase ချိတ်ဆက်မှု မရှိပါ', 'Supabase connection not available');
+                return;
+            }
+
             try {
                 const { data: user, error: userError } = await supabase
                     .from('users')
@@ -1945,7 +2259,13 @@
                     .filter(order => order.status === 'approved')
                     .reduce((sum, order) => sum + order.total_amount, 0);
 
-                alert(`${user.full_name}\n\n${currentLanguage === 'my' ? 'အီးမေးလ်:' : 'Email:'} ${user.email}\n${currentLanguage === 'my' ? 'ဖုန်း:' : 'Phone:'} ${user.phone || 'N/A'}\n${currentLanguage === 'my' ? 'မှာယူမှုများ:' : 'Orders:'} ${orders.length}\n${currentLanguage === 'my' ? 'စုစုပေါင်း သုံးစွဲမှု:' : 'Total Spent:'} ${formatPrice(totalSpent)}\n${currentLanguage === 'my' ? 'ပါဝင်သည့်ရက်:' : 'Joined:'} ${formatDate(user.created_at)}`);
+                alert(`${user.full_name}
+
+${currentLanguage === 'my' ? 'အီးမေးလ်:' : 'Email:'} ${user.email}
+${currentLanguage === 'my' ? 'ဖုန်း:' : 'Phone:'} ${user.phone || 'N/A'}
+${currentLanguage === 'my' ? 'မှာယူမှုများ:' : 'Orders:'} ${orders.length}
+${currentLanguage === 'my' ? 'စုစုပေါင်း သုံးစွဲမှု:' : 'Total Spent:'} ${formatPrice(totalSpent)}
+${currentLanguage === 'my' ? 'ပါဝင်သည့်ရက်:' : 'Joined:'} ${formatDate(user.created_at)}`);
             } catch (error) {
                 console.error('Error loading user details:', error);
                 showMessage('error', 'အသုံးပြုသူ အသေးစိတ် ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load user details');
@@ -2000,12 +2320,6 @@
                 displayUsers(filteredUsers);
             });
 
-            // Refund search
-            document.getElementById('refundSearch').addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                loadRefunds(); // Reload with search term
-            });
-
             // Post search
             document.getElementById('postSearch').addEventListener('input', function() {
                 const searchTerm = this.value.toLowerCase();
@@ -2016,10 +2330,19 @@
                 );
                 displayPosts(filteredPosts);
             });
+
+            // Close modals when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    e.target.classList.remove('show');
+                }
+            });
         }
 
         // Real-time Functions
         function setupRealtimeSubscriptions() {
+            if (!supabase) return;
+
             // Subscribe to orders changes
             supabase
                 .channel('orders')
@@ -2168,8 +2491,8 @@
             const container = document.getElementById(containerId);
             const message = currentLanguage === 'my' ? messageMy : messageEn;
             container.innerHTML = `
-                <div style="text-align: center; padding: 3rem; color: #dc3545;">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚠️</div>
                     <div>${message}</div>
                 </div>
             `;
@@ -2183,30 +2506,31 @@
             messageEl.className = `message ${type}`;
             messageEl.textContent = message;
             
-            // Insert at top of main content
-            const mainContent = document.querySelector('.main-content');
-            mainContent.insertBefore(messageEl, mainContent.firstChild);
+            // Insert into message container
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.appendChild(messageEl);
             
             // Auto remove after 5 seconds
             setTimeout(() => {
-                messageEl.remove();
+                if (messageEl.parentNode) {
+                    messageEl.remove();
+                }
             }, 5000);
         }
 
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('show');
+            document.body.style.overflow = 'hidden';
         }
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('show');
+            document.body.style.overflow = 'auto';
         }
 
-        // Close modals when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('modal')) {
-                e.target.classList.remove('show');
-            }
-        });
+        function viewRefundDetails(orderId) {
+            viewOrderDetails(orderId);
+        }
     </script>
 </body>
 </html>
