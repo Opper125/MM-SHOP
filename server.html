@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - စီမံခန့်ခွဲမှု</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #ff6b35;
+            --secondary-color: #004e89;
+            --accent-color: #ffd23f;
+            --text-color: #333;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 20px rgba(0,0,0,0.1);
+            --gradient: linear-gradient(135deg, #ff6b35, #f7931e);
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--gradient);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-item {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .language-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .main-container {
+            display: flex;
+            margin-top: 80px;
+            min-height: calc(100vh - 80px);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            padding: 2rem 0;
+            position: fixed;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: rgba(255, 107, 53, 0.1);
+            border-left-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .sidebar-icon {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .page-subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            opacity: 0.7;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .stat-change.positive {
+            color: var(--success-color);
+        }
+
+        .stat-change.negative {
+            color: var(--danger-color);
+        }
+
+        .content-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-info {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: var(--text-color);
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-active {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-refund-requested {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .status-refunded {
+            background: #a8e6cf;
+            color: #00b894;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .order-item-info {
+            flex: 1;
+        }
+
+        .order-item-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .order-item-details {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .receipt-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 0.8rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1rem;
+        }
+
+        .filter-select {
+            padding: 0.8rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            background: white;
+            font-size: 1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e0e0e0;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #e0e0e0;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary-color);
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .refund-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .refund-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-filter {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: auto;
+            }
+
+            .data-table {
+                font-size: 0.9rem;
+            }
+
+            .modal-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="index.html" class="logo" data-en="Myanmar Mall Admin" data-my="မြန်မာ မော်လ် စီမံခန့်ခွဲမှု">မြန်မ��� မော်လ် စီမံခန့်ခွဲမှု</a>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-item" data-en="Website" data-my="ဝက်ဘ်ဆိုက်">ဝက်ဘ်ဆိုက်</a>
+                <a href="upload.html" class="nav-item" data-en="Upload" data-my="တင်ရန်">တင်ရန်</a>
+                <button class="language-toggle" onclick="toggleLanguage()" id="langToggle">EN</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link active" onclick="showSection('dashboard')" data-en="Dashboard" data-my="ဒက်ရှ်ဘုတ်">
+                        <span class="sidebar-icon">📊</span>
+                        <span data-en="Dashboard" data-my="ဒက်ရှ်ဘုတ်">ဒက်ရှ်ဘုတ်</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showSection('orders')" data-en="Orders" data-my="မှာယူမှုများ">
+                        <span class="sidebar-icon">📦</span>
+                        <span data-en="Orders" data-my="မှာယူမှုများ">မှာယူမှုများ</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showSection('products')" data-en="Products" data-my="ပစ္စည်းများ">
+                        <span class="sidebar-icon">🛍️</span>
+                        <span data-en="Products" data-my="ပစ္စည်းများ">ပစ္စည်းများ</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showSection('users')" data-en="Users" data-my="အသုံးပြုသူများ">
+                        <span class="sidebar-icon">👥</span>
+                        <span data-en="Users" data-my="အသုံးပြုသူများ">အသုံးပြုသူများ</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showSection('refunds')" data-en="Refunds" data-my="ငွေပြန်အမ်းမှုများ">
+                        <span class="sidebar-icon">💰</span>
+                        <span data-en="Refunds" data-my="ငွေပြန်အမ်းမှုများ">ငွေပြန်အမ်းမှုများ</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showSection('analytics')" data-en="Analytics" data-my="ခွဲခြမ်းစိတ်ဖြာမှု">
+                        <span class="sidebar-icon">📈</span>
+                        <span data-en="Analytics" data-my="ခွဲခြမ်းစိတ်ဖြာမှု">ခွဲခြမ်းစိတ်ဖြာမှု</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" class="sidebar-link" onclick="showSection('posts')" data-en="Posts" data-my="ပို့စ်များ">
+                        <span class="sidebar-icon">📝</span>
+                        <span data-en="Posts" data-my="ပို့စ်များ">ပို့စ်များ</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section class="content-section active" id="dashboardSection">
+                <div class="page-header">
+                    <h1 class="page-title" data-en="Dashboard" data-my="ဒက်ရှ်ဘုတ်">ဒက်ရှ်ဘုတ်</h1>
+                    <p class="page-subtitle" data-en="Overview of your business" data-my="သင့်လုပ်ငန်း၏ ခြုံငုံကြည့်ရှုမှု">သင့်လုပ်ငန်း၏ ခြုံငုံကြည့်ရှုမှု</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title" data-en="Total Orders" data-my="စုစုပေါင်း မှာယူမှု">စုစုပေါင်း မှာယူမှု</span>
+                            <span class="stat-icon">📦</span>
+                        </div>
+                        <div class="stat-value" id="totalOrders">0</div>
+                        <div class="stat-change positive" id="ordersChange">+0%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title" data-en="Total Revenue" data-my="စုစုပေါင်း ဝင်ငွေ">စုစုပေါင်း ဝင်ငွေ</span>
+                            <span class="stat-icon">💰</span>
+                        </div>
+                        <div class="stat-value" id="totalRevenue">0 ကျပ်</div>
+                        <div class="stat-change positive" id="revenueChange">+0%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title" data-en="Total Users" data-my="စုစုပေါင်း အသုံးပြုသူ">စုစုပေါင်း အသုံးပြုသူ</span>
+                            <span class="stat-icon">👥</span>
+                        </div>
+                        <div class="stat-value" id="totalUsers">0</div>
+                        <div class="stat-change positive" id="usersChange">+0%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-title" data-en="Total Products" data-my="စုစုပေါင်း ပစ္စည်း">စုစုပေါင်း ပစ္စည်း</span>
+                            <span class="stat-icon">🛍️</span>
+                        </div>
+                        <div class="stat-value" id="totalProducts">0</div>
+                        <div class="stat-change positive" id="productsChange">+0%</div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="content-section active">
+                    <div class="section-header">
+                        <h2 class="section-title" data-en="Recent Orders" data-my="လတ်တလော မှာယူမှုများ">လတ်တလော မှာယူမှုများ</h2>
+                        <button class="btn btn-primary" onclick="showSection('orders')" data-en="View All" data-my="အားလုံးကြည့်ရန်">အားလုံးကြည့်ရန်</button>
+                    </div>
+                    <div id="recentOrdersTable"></div>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section class="content-section" id="ordersSection">
+                <div class="page-header">
+                    <h1 class="page-title" data-en="Orders Management" data-my="မှာယူမှု စီမံခန့်ခွဲမှု">မှာယူမှု စီမံခန့်ခွဲမှု</h1>
+                    <p class="page-subtitle" data-en="Manage all customer orders" data-my="ဖောက်သည်များ၏ မှာယူမှုများ စီမံခန့်ခွဲရန်">ဖောက်သည်များ၏ မှာယူမှုများ စီမံခန့်ခွဲရန်</p>
+                </div>
+
+                <div class="search-filter">
+                    <input type="text" class="search-input" id="orderSearch" placeholder="မှာယူမှု ရှာဖွေရန်..." data-en-placeholder="Search orders..." data-my-placeholder="မှာယူမှု ရှာဖွေရန်...">
+                    <select class="filter-select" id="orderStatusFilter">
+                        <option value="" data-en="All Status" data-my="အခြေအနေ အားလုံး">အခြေအနေ အားလုံး</option>
+                        <option value="pending" data-en="Pending" data-my="စောင့်ဆိုင်းနေသည်">စောင့်ဆိုင်းနေသည်</option>
+                        <option value="approved" data-en="Approved" data-my="အတည်ပြုပြီး">အတည်ပြုပြီး</option>
+                        <option value="rejected" data-en="Rejected" data-my="ငြင်းပယ်ပြီး">ငြင်းပယ်ပြီး</option>
+                        <option value="refund_requested" data-en="Refund Requested" data-my="ငွေပြန်အမ်းတောင်းခံထား">ငွေပြန်အမ်းတောင်းခံထား</option>
+                        <option value="refunded" data-en="Refunded" data-my="ငွေပြန်အမ်းပြီး">ငွေပြန်အမ်းပြီး</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadOrders()" data-en="Refresh" data-my="ပြန်လည်ရယူရန်">ပြန်လည်ရယူရန်</button>
+                </div>
+
+                <div id="ordersTable"></div>
+            </section>
+
+            <!-- Products Section -->
+            <section class="content-section" id="productsSection">
+                <div class="page-header">
+                    <h1 class="page-title" data-en="Products Management" data-my="ပစ္စည်း စီမံခန့်ခွဲမှု">ပစ္စည်း စီမံခန့်ခွဲမှု</h1>
+                    <p class="page-subtitle" data-en="Manage your product inventory" data-my="သင့်ပစ္စည်း စာရင်းများ စီမံခန့်ခွဲရန်">သင့်ပစ္စည်း စာရင်းများ စီမံခန့်ခွဲရန်</p>
+                </div>
+
+                <div class="search-filter">
+                    <input type="text" class="search-input" id="productSearch" placeholder="ပစ္စည်း ရှာဖွေရန်..." data-en-placeholder="Search products..." data-my-placeholder="ပစ္စည်း ရှာဖွေရန်...">
+                    <select class="filter-select" id="productCategoryFilter">
+                        <option value="" data-en="All Categories" data-my="အမျိုးအစား အားလုံး">အမျိုးအစား အားလုံး</option>
+                        <option value="electronics" data-en="Electronics" data-my="အီလက်ထရွန်းနစ်">အီလက်ထရွန်းနစ်</option>
+                        <option value="fashion" data-en="Fashion" data-my="ဖက်ရှင်">ဖက်ရှင်</option>
+                        <option value="home" data-en="Home & Garden" data-my="အိမ်နှင့် ဥယျာဉ်">အိမ်နှင့် ဥယျာဉ်</option>
+                        <option value="sports" data-en="Sports" data-my="အားကစား">အားကစား</option>
+                        <option value="books" data-en="Books" data-my="စာအုပ်များ">စာအုပ်များ</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadProducts()" data-en="Refresh" data-my="ပြန်လည်ရယူရန်">ပြန်လည်ရယူရန်</button>
+                </div>
+
+                <div id="productsTable"></div>
+            </section>
+
+            <!-- Users Section -->
+            <section class="content-section" id="usersSection">
+                <div class="page-header">
+                    <h1 class="page-title" data-en="Users Management" data-my="အသုံးပြုသူ စီမံခန့်ခွဲမှု">အသုံးပြုသူ စီမံခန့်ခွဲမှု</h1>
+                    <p class="page-subtitle" data-en="Manage registered users" data-my="မှတ်ပုံတင်ထားသော အသုံးပြုသူများ စီမံခန့်ခွဲရန်">မှတ်ပုံတင်ထားသော အသုံးပြုသူများ စီမံခန့်ခွဲရန်</p>
+                </div>
+
+                <div class="search-filter">
+                    <input type="text" class="search-input" id="userSearch" placeholder="အသုံးပြုသူ ရှာဖွေရန်..." data-en-placeholder="Search users..." data-my-placeholder="အသုံးပြုသူ ရှာဖွေရန်...">
+                    <button class="btn btn-primary" onclick="loadUsers()" data-en="Refresh" data-my="ပြန်လည်ရယူရန်">ပြန်လည်ရယူရန်</button>
+                </div>
+
+                <div id="usersTable"></div>
+            </section>
+
+            <!-- Refunds Section -->
+            <section class="content-section" id="refundsSection">
+                <div class="page-header">
+                    <h1 class="page-title" data-en="Refunds Management" data-my="ငွေပြန်အမ်းမှု စီမံခန့်ခွဲမှု">ငွေပြန်အမ်းမှု စီမံခန့်ခွဲမှု</h1>
+                    <p class="page-subtitle" data-en="Handle refund requests" data-my="ငွေပြန်အမ်းတောင်းခံမှုများ ကိုင်တွယ်ရန်">ငွေပြန်အမ်းတောင်းခံမှုများ ကိုင်တွယ်ရန်</p>
+                </div>
+
+                <div class="search-filter">
+                    <input type="text" class="search-input" id="refundSearch" placeholder="ငွေပြန်အမ်းမှု ရှာဖွေရန်..." data-en-placeholder="Search refunds..." data-my-placeholder="ငွေပြန်အမ်းမှု ရှာဖွေရန်...">
+                    <select class="filter-select" id="refundStatusFilter">
+                        <option value="refund_requested" data-en="Pending Refunds" data-my="စောင့်ဆိုင်းနေသော ငွေပြန်အမ်းမှု">စောင့်ဆိုင်းနေသော ငွေပြန်အမ်းမှု</option>
+                        <option value="refunded" data-en="Completed Refunds" data-my="ပြီးစီးသော ငွေပြန်အမ်းမှု">ပြီးစီးသော ငွေပြန်အမ်းမှု</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadRefunds()" data-en="Refresh" data-my="ပြန်လည်ရယူရန်">ပြန်လည်ရယူရန်</button>
+                </div>
+
+                <div id="refundsTable"></div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section class="content-section" id="analyticsSection">
+                <div class="page-header">
+                    <h1 class="page-title" data-en="Analytics" data-my="ခွဲခြမ်းစိတ်ဖြာမှု">ခွဲခြမ်းစိတ်ဖြာမှု</h1>
+                    <p class="page-subtitle" data-en="Business insights and reports" data-my="လုပ်ငန်း ထိုးထွင်းသိမြင်မှုများနှင့် အစီရင်ခံစာများ">လုပ်ငန်း ထိုးထွင်းသိမြင်မှုများနှင့် အစီရင်ခံစာများ</p>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title" data-en="Monthly Sales" data-my="လစဥ် ရောင်းအား">လစဥ် ရောင်းအား</h3>
+                    <canvas id="salesChart" width="400" height="200"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title" data-en="Order Status Distribution" data-my="မှာယူမှု အခြေအနေ ခွဲဝေမှု">မှာယူမှု အခြေအနေ ခွဲဝေမှု</h3>
+                    <canvas id="orderStatusChart" width="400" height="200"></canvas>
+                </div>
+            </section>
+
+            <!-- Posts Section -->
+            <section class="content-section" id="postsSection">
+                <div class="page-header">
+                    <h1 class="page-title" data-en="Posts Management" data-my="ပို့စ် စီမံခန့်ခွဲမှု">ပို့စ် စီမံခန့်ခွဲမှု</h1>
+                    <p class="page-subtitle" data-en="Manage community posts" data-my="အသိုင်းအဝိုင်း ပို့စ်များ စီမံခန့်ခွဲရန်">အသိုင်းအဝိုင်း ပို့စ်များ စီမံခန့်ခွဲရန်</p>
+                </div>
+
+                <div class="search-filter">
+                    <input type="text" class="search-input" id="postSearch" placeholder="ပို့စ် ရှာဖွေရန်..." data-en-placeholder="Search posts..." data-my-placeholder="ပို့စ် ရှာဖွေရန်...">
+                    <button class="btn btn-primary" onclick="loadPosts()" data-en="Refresh" data-my="ပြန်လည်ရယူရန်">ပြန်လည်ရယူရန်</button>
+                </div>
+
+                <div id="postsTable"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" data-en="Order Details" data-my="မှာယူမှု အသေးစိတ်">မှာယူမှု အသေးစိတ်</h2>
+                <button class="close-btn" onclick="closeModal('orderModal')">&times;</button>
+            </div>
+            <div id="orderModalContent">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Modal -->
+    <div class="modal" id="refundModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" data-en="Process Refund" data-my="ငွေပြန်အမ်းမှု လုပ်ဆောင်ရန်">ငွေပြန်အမ်းမှု လုပ်ဆောင်ရန်</h2>
+                <button class="close-btn" onclick="closeModal('refundModal')">&times;</button>
+            </div>
+            <div id="refundModalContent">
+                <!-- Refund details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://uwuztdwbjwkuoqmclcpq.supabase.co'; // Replace with your Supabase URL
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3dXp0ZHdiandrdW9xbWNsY3BxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDc3MzIsImV4cCI6MjA2MzUyMzczMn0.79WzYhDz-v80SbhOWEIegtSJKO6AtBcLN5REasUz1CI'; // Replace with your Supabase Anon Key
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Global Variables
+        let currentLanguage = 'my';
+        let currentSection = 'dashboard';
+        let allOrders = [];
+        let allProducts = [];
+        let allUsers = [];
+        let allPosts = [];
+        let salesChart = null;
+        let orderStatusChart = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            setupEventListeners();
+            setupRealtimeSubscriptions();
+        });
+
+        // Navigation Functions
+        function showSection(sectionName) {
+            // Update sidebar active state
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionName + 'Section').classList.add('active');
+            currentSection = sectionName;
+
+            // Load section data
+            switch(sectionName) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'orders':
+                    loadOrders();
+                    break;
+                case 'products':
+                    loadProducts();
+                    break;
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'refunds':
+                    loadRefunds();
+                    break;
+                case 'analytics':
+                    loadAnalytics();
+                    break;
+                case 'posts':
+                    loadPosts();
+                    break;
+            }
+        }
+
+        // Dashboard Functions
+        async function loadDashboardData() {
+            try {
+                // Load stats
+                await Promise.all([
+                    loadStats(),
+                    loadRecentOrders()
+                ]);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                // Get orders count and revenue
+                const { data: orders, error: ordersError } = await supabase
+                    .from('orders')
+                    .select('total_amount, created_at, status');
+
+                if (ordersError) throw ordersError;
+
+                const totalOrders = orders.length;
+                const totalRevenue = orders
+                    .filter(order => order.status === 'approved' || order.status === 'refund_requested')
+                    .reduce((sum, order) => sum + order.total_amount, 0);
+
+                // Get users count
+                const { data: users, error: usersError } = await supabase
+                    .from('users')
+                    .select('id');
+
+                if (usersError) throw usersError;
+
+                const totalUsers = users.length;
+
+                // Get products count
+                const { data: products, error: productsError } = await supabase
+                    .from('products')
+                    .select('id');
+
+                if (productsError) throw productsError;
+
+                const totalProducts = products.length;
+
+                // Update UI
+                document.getElementById('totalOrders').textContent = totalOrders;
+                document.getElementById('totalRevenue').textContent = formatPrice(totalRevenue);
+                document.getElementById('totalUsers').textContent = totalUsers;
+                document.getElementById('totalProducts').textContent = totalProducts;
+
+                // Calculate changes (simplified - you can implement proper comparison)
+                document.getElementById('ordersChange').textContent = '+12%';
+                document.getElementById('revenueChange').textContent = '+8%';
+                document.getElementById('usersChange').textContent = '+15%';
+                document.getElementById('productsChange').textContent = '+5%';
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadRecentOrders() {
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select(`
+                        *,
+                        users (full_name, email)
+                    `)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (error) throw error;
+
+                displayRecentOrders(data || []);
+            } catch (error) {
+                console.error('Error loading recent orders:', error);
+            }
+        }
+
+        function displayRecentOrders(orders) {
+            const container = document.getElementById('recentOrdersTable');
+            
+            if (orders.length === 0) {
+                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'မှာယူမှု မရှိသေးပါ' : 'No orders yet'}</p>`;
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th data-en="Order ID" data-my="မှာယူမှု ID">မှာယူမှု ID</th>
+                        <th data-en="Customer" data-my="ဖောက်သည်">ဖောက်သည်</th>
+                        <th data-en="Amount" data-my="ပမာဏ">ပမာဏ</th>
+                        <th data-en="Status" data-my="အခြေအနေ">အခြေအနေ</th>
+                        <th data-en="Date" data-my="ရက်စွဲ">ရက်စွဲ</th>
+                        <th data-en="Actions" data-my="လုပ်ဆောင်ချက်များ">လုပ်ဆောင်ချက်များ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${orders.map(order => `
+                        <tr>
+                            <td>#${order.id}</td>
+                            <td>${order.users?.full_name || 'Unknown'}</td>
+                            <td>${formatPrice(order.total_amount)}</td>
+                            <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+                            <td>${formatDate(order.created_at)}</td>
+                            <td>
+                                <button class="btn btn-info" onclick="viewOrderDetails(${order.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                    ${currentLanguage === 'my' ? 'ကြည့်ရန်' : 'View'}
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        // Orders Functions
+        async function loadOrders() {
+            try {
+                showLoading('ordersTable');
+
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select(`
+                        *,
+                        users (full_name, email, phone)
+                    `)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allOrders = data || [];
+                displayOrders(allOrders);
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showError('ordersTable', 'မှာယူမှုများ ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load orders');
+            }
+        }
+
+        function displayOrders(orders) {
+            const container = document.getElementById('ordersTable');
+            
+            if (orders.length === 0) {
+                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'မှာယူမှု မရှိသေးပါ' : 'No orders found'}</p>`;
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th data-en="Order ID" data-my="မှာယူမှု ID">မှာယူမှု ID</th>
+                        <th data-en="Customer" data-my="ဖောက်သည်">ဖောက်သည်</th>
+                        <th data-en="Amount" data-my="ပမာဏ">ပမာဏ</th>
+                        <th data-en="Payment Method" data-my="ငွေပေးချေမှု">ငွေပေးချေမှု</th>
+                        <th data-en="Status" data-my="အခြေအနေ">အခြေအနေ</th>
+                        <th data-en="Date" data-my="ရက်စွဲ">ရက်စွဲ</th>
+                        <th data-en="Actions" data-my="လုပ်ဆောင်ချက်များ">လုပ်ဆောင်ချက်များ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${orders.map(order => `
+                        <tr>
+                            <td>#${order.id}</td>
+                            <td>
+                                <div>${order.users?.full_name || 'Unknown'}</div>
+                                <div style="font-size: 0.8rem; color: #666;">${order.users?.email || ''}</div>
+                            </td>
+                            <td>${formatPrice(order.total_amount)}</td>
+                            <td>${order.payment_method?.toUpperCase() || 'N/A'}</td>
+                            <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+                            <td>${formatDate(order.created_at)}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <button class="btn btn-info" onclick="viewOrderDetails(${order.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                        ${currentLanguage === 'my' ? 'ကြည့်ရန်' : 'View'}
+                                    </button>
+                                    ${order.status === 'pending' ? `
+                                        <button class="btn btn-success" onclick="approveOrder(${order.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                            ${currentLanguage === 'my' ? 'အတည်ပြုရန်' : 'Approve'}
+                                        </button>
+                                        <button class="btn btn-danger" onclick="rejectOrder(${order.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                            ${currentLanguage === 'my' ? 'ငြင်းပယ်ရန်' : 'Reject'}
+                                        </button>
+                                    ` : ''}
+                                    ${order.status === 'refund_requested' ? `
+                                        <button class="btn btn-warning" onclick="processRefund(${order.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                            ${currentLanguage === 'my' ? 'ငွေပြန်အမ်းရန်' : 'Process Refund'}
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        // Products Functions
+        async function loadProducts() {
+            try {
+                showLoading('productsTable');
+
+                const { data, error } = await supabase
+                    .from('products')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allProducts = data || [];
+                displayProducts(allProducts);
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showError('productsTable', 'ပစ္စည်းများ ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load products');
+            }
+        }
+
+        function displayProducts(products) {
+            const container = document.getElementById('productsTable');
+            
+            if (products.length === 0) {
+                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'ပစ္စည်း မရှိသေးပါ' : 'No products found'}</p>`;
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th data-en="Image" data-my="ပုံ">ပုံ</th>
+                        <th data-en="Product Name" data-my="ပစ္စည်း အမည်">ပစ္စည်း အမည်</th>
+                        <th data-en="Category" data-my="အမျိုးအစား">အမျိုးအစား</th>
+                        <th data-en="Price" data-my="စျေးနှုန်း">စျေးနှုန်း</th>
+                        <th data-en="Status" data-my="အခြေအနေ">အခြေအနေ</th>
+                        <th data-en="Date Added" data-my="ထည့်သွင်းသည့်ရက်">ထည့်သွင်းသည့်ရက်</th>
+                        <th data-en="Actions" data-my="လုပ်ဆောင်ချက်များ">လုပ်ဆောင်ချက်များ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${products.map(product => `
+                        <tr>
+                            <td>
+                                <img src="${product.image_url}" alt="${product.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;">${currentLanguage === 'my' ? product.title : (product.title_en || product.title)}</div>
+                                <div style="font-size: 0.8rem; color: #666;">${(currentLanguage === 'my' ? product.description : (product.description_en || product.description)).substring(0, 50)}...</div>
+                            </td>
+                            <td>${getCategoryText(product.category)}</td>
+                            <td>${formatPrice(product.price)}</td>
+                            <td><span class="status-badge status-${product.status}">${getStatusText(product.status)}</span></td>
+                            <td>${formatDate(product.created_at)}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <button class="btn btn-info" onclick="editProduct(${product.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                        ${currentLanguage === 'my' ? 'ပြင်ရန်' : 'Edit'}
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteProduct(${product.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                        ${currentLanguage === 'my' ? 'ဖျက်ရန်' : 'Delete'}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        // Users Functions
+        async function loadUsers() {
+            try {
+                showLoading('usersTable');
+
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allUsers = data || [];
+                displayUsers(allUsers);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showError('usersTable', 'အသုံးပြုသူများ ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load users');
+            }
+        }
+
+        function displayUsers(users) {
+            const container = document.getElementById('usersTable');
+            
+            if (users.length === 0) {
+                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'အသုံးပြုသူ မရှိသေးပါ' : 'No users found'}</p>`;
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th data-en="Name" data-my="အမည်">အမည်</th>
+                        <th data-en="Email" data-my="အီးမေးလ်">အီးမေးလ်</th>
+                        <th data-en="Phone" data-my="ဖုန်းနံပါတ်">ဖုန်းနံပါတ်</th>
+                        <th data-en="Orders" data-my="မှာယူမှုများ">မှာယူမှုများ</th>
+                        <th data-en="Total Spent" data-my="စုစုပေါင်း သုံးစွဲမှု">စုစုပေါင်း သုံးစွဲမှု</th>
+                        <th data-en="Joined Date" data-my="ပါဝင်သည့်ရက်">ပါဝင်သည့်ရက်</th>
+                        <th data-en="Actions" data-my="လုပ်ဆောင်ချက်များ">လုပ်ဆောင်ချက်များ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users.map(user => `
+                        <tr>
+                            <td>${user.full_name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.phone || 'N/A'}</td>
+                            <td>${user.order_count || 0}</td>
+                            <td>${formatPrice(user.total_spent || 0)}</td>
+                            <td>${formatDate(user.created_at)}</td>
+                            <td>
+                                <button class="btn btn-info" onclick="viewUserDetails('${user.id}')" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                    ${currentLanguage === 'my' ? 'ကြည့်ရန်' : 'View'}
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        // Refunds Functions
+        async function loadRefunds() {
+            try {
+                showLoading('refundsTable');
+
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select(`
+                        *,
+                        users (full_name, email, phone)
+                    `)
+                    .in('status', ['refund_requested', 'refunded'])
+                    .order('refund_requested_at', { ascending: false });
+
+                if (error) throw error;
+
+                displayRefunds(data || []);
+            } catch (error) {
+                console.error('Error loading refunds:', error);
+                showError('refundsTable', 'ငွေပြန်အမ်းမှုများ ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load refunds');
+            }
+        }
+
+        function displayRefunds(refunds) {
+            const container = document.getElementById('refundsTable');
+            
+            if (refunds.length === 0) {
+                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'ငွေပြန်အမ်းမှု မရှိသေးပါ' : 'No refunds found'}</p>`;
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th data-en="Order ID" data-my="မှာယူမှု ID">မှာယူမှု ID</th>
+                        <th data-en="Customer" data-my="ဖောက်သည်">ဖောက်သည်</th>
+                        <th data-en="Amount" data-my="ပမာဏ">ပမာဏ</th>
+                        <th data-en="Reason" data-my="အကြောင်းရင်း">အကြောင်းရင်း</th>
+                        <th data-en="Status" data-my="အခြေအနေ">အခြေအနေ</th>
+                        <th data-en="Request Date" data-my="တောင်းခံသည့်ရက်">တောင်းခံသည့်ရက်</th>
+                        <th data-en="Actions" data-my="လုပ်ဆောင်ချက်များ">လုပ်ဆောင်ချက်များ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${refunds.map(refund => `
+                        <tr>
+                            <td>#${refund.id}</td>
+                            <td>
+                                <div>${refund.users?.full_name || 'Unknown'}</div>
+                                <div style="font-size: 0.8rem; color: #666;">${refund.users?.email || ''}</div>
+                            </td>
+                            <td>${formatPrice(refund.total_amount)}</td>
+                            <td>${refund.refund_reason || 'N/A'}</td>
+                            <td><span class="status-badge status-${refund.status}">${getStatusText(refund.status)}</span></td>
+                            <td>${formatDate(refund.refund_requested_at)}</td>
+                            <td>
+                                ${refund.status === 'refund_requested' ? `
+                                    <button class="btn btn-warning" onclick="processRefund(${refund.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                        ${currentLanguage === 'my' ? 'လုပ်ဆောင်ရန်' : 'Process'}
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-info" onclick="viewRefundDetails(${refund.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                        ${currentLanguage === 'my' ? 'ကြည့်ရန်' : 'View'}
+                                    </button>
+                                `}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        // Analytics Functions
+        async function loadAnalytics() {
+            try {
+                await Promise.all([
+                    loadSalesChart(),
+                    loadOrderStatusChart()
+                ]);
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+            }
+        }
+
+        async function loadSalesChart() {
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('total_amount, created_at, status')
+                    .eq('status', 'approved');
+
+                if (error) throw error;
+
+                // Group by month
+                const monthlyData = {};
+                data.forEach(order => {
+                    const month = new Date(order.created_at).toISOString().substring(0, 7);
+                    monthlyData[month] = (monthlyData[month] || 0) + order.total_amount;
+                });
+
+                const labels = Object.keys(monthlyData).sort();
+                const values = labels.map(label => monthlyData[label]);
+
+                const ctx = document.getElementById('salesChart').getContext('2d');
+                
+                if (salesChart) {
+                    salesChart.destroy();
+                }
+
+                salesChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: currentLanguage === 'my' ? 'ရောင်းအား (ကျပ်)' : 'Sales (MMK)',
+                            data: values,
+                            borderColor: '#ff6b35',
+                            backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading sales chart:', error);
+            }
+        }
+
+        async function loadOrderStatusChart() {
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('status');
+
+                if (error) throw error;
+
+                // Count by status
+                const statusCounts = {};
+                data.forEach(order => {
+                    statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+                });
+
+                const labels = Object.keys(statusCounts).map(status => getStatusText(status));
+                const values = Object.values(statusCounts);
+
+                const ctx = document.getElementById('orderStatusChart').getContext('2d');
+                
+                if (orderStatusChart) {
+                    orderStatusChart.destroy();
+                }
+
+                orderStatusChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: [
+                                '#ffc107',
+                                '#28a745',
+                                '#dc3545',
+                                '#17a2b8',
+                                '#fd7e14'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading order status chart:', error);
+            }
+        }
+
+        // Posts Functions
+        async function loadPosts() {
+            try {
+                showLoading('postsTable');
+
+                const { data, error } = await supabase
+                    .from('posts')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                allPosts = data || [];
+                displayPosts(allPosts);
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                showError('postsTable', 'ပို့စ်များ ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load posts');
+            }
+        }
+
+        function displayPosts(posts) {
+            const container = document.getElementById('postsTable');
+            
+            if (posts.length === 0) {
+                container.innerHTML = `<p style="text-align: center; padding: 2rem;">${currentLanguage === 'my' ? 'ပို့စ် မရှိသေးပါ' : 'No posts found'}</p>`;
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th data-en="Media" data-my="မီဒီယာ">မီဒီယာ</th>
+                        <th data-en="Title" data-my="ခေါင်းစဉ်">ခေါင်းစဉ်</th>
+                        <th data-en="Content" data-my="အကြောင်းအရာ">အကြောင်းအရာ</th>
+                        <th data-en="Status" data-my="အခြေအနေ">အခြေအနေ</th>
+                        <th data-en="Date" data-my="ရက်စွဲ">ရက်စွဲ</th>
+                        <th data-en="Actions" data-my="လုပ်ဆောင်ချက်များ">လုပ်ဆောင်ချက်များ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${posts.map(post => `
+                        <tr>
+                            <td>
+                                ${post.media_url ? `
+                                    ${post.media_type === 'video' ? 
+                                        `<video src="${post.media_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" muted></video>` :
+                                        `<img src="${post.media_url}" alt="${post.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">`
+                                    }
+                                ` : 'N/A'}
+                            </td>
+                            <td>
+                                <div style="font-weight: 600;">${currentLanguage === 'my' ? post.title : (post.title_en || post.title)}</div>
+                            </td>
+                            <td>
+                                <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                                    ${(currentLanguage === 'my' ? post.content : (post.content_en || post.content)).substring(0, 100)}...
+                                </div>
+                            </td>
+                            <td><span class="status-badge status-${post.status}">${getStatusText(post.status)}</span></td>
+                            <td>${formatDate(post.created_at)}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <button class="btn btn-info" onclick="editPost(${post.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                        ${currentLanguage === 'my' ? 'ပြင်ရန်' : 'Edit'}
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deletePost(${post.id})" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                                        ${currentLanguage === 'my' ? 'ဖျက်ရန်' : 'Delete'}
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            container.innerHTML = '';
+            container.appendChild(table);
+        }
+
+        // Order Management Functions
+        async function viewOrderDetails(orderId) {
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select(`
+                        *,
+                        users (full_name, email, phone)
+                    `)
+                    .eq('id', orderId)
+                    .single();
+
+                if (error) throw error;
+
+                const modalContent = document.getElementById('orderModalContent');
+                modalContent.innerHTML = `
+                    <div class="order-details">
+                        <h3>Order #${data.id}</h3>
+                        <div style="margin: 1rem 0;">
+                            <strong>${currentLanguage === 'my' ? 'ဖောက်သည်:' : 'Customer:'}</strong> ${data.users?.full_name || 'Unknown'}<br>
+                            <strong>${currentLanguage === 'my' ? 'အီးမေးလ်:' : 'Email:'}</strong> ${data.users?.email || 'N/A'}<br>
+                            <strong>${currentLanguage === 'my' ? 'ဖုန်း:' : 'Phone:'}</strong> ${data.users?.phone || 'N/A'}
+                        </div>
+                        <div style="margin: 1rem 0;">
+                            <strong>${currentLanguage === 'my' ? 'ပို့ဆောင်ရေး လိပ်စာ:' : 'Shipping Address:'}</strong><br>
+                            ${data.shipping_name}<br>
+                            ${data.shipping_phone}<br>
+                            ${data.shipping_address}<br>
+                            ${data.shipping_city}
+                        </div>
+                        <div style="margin: 1rem 0;">
+                            <strong>${currentLanguage === 'my' ? 'ငွေပေးချေမှု:' : 'Payment:'}</strong> ${data.payment_method?.toUpperCase()}<br>
+                            <strong>${currentLanguage === 'my' ? 'နံပါတ်:' : 'Number:'}</strong> ${data.payment_number}
+                        </div>
+                        <div style="margin: 1rem 0;">
+                            <strong>${currentLanguage === 'my' ? 'မှာယူထားသော ပစ္စည်းများ:' : 'Ordered Items:'}</strong>
+                            ${data.items.map(item => `
+                                <div class="order-item">
+                                    <img src="${item.image_url}" alt="${item.title}" class="order-item-image">
+                                    <div class="order-item-info">
+                                        <div class="order-item-title">${item.title}</div>
+                                        <div class="order-item-details">
+                                            ${currentLanguage === 'my' ? 'အရေအတွက်:' : 'Quantity:'} ${item.quantity} × ${formatPrice(item.price)}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="margin: 1rem 0;">
+                            <strong>${currentLanguage === 'my' ? 'စုစုပေါင်း:' : 'Total:'}</strong> ${formatPrice(data.total_amount)}
+                        </div>
+                        ${data.receipt_url ? `
+                            <div style="margin: 1rem 0;">
+                                <strong>${currentLanguage === 'my' ? 'ငွေလွှဲပြေစာ:' : 'Payment Receipt:'}</strong><br>
+                                <img src="${data.receipt_url}" alt="Receipt" class="receipt-image" onclick="window.open('${data.receipt_url}', '_blank')">
+                            </div>
+                        ` : ''}
+                        ${data.status === 'pending' ? `
+                            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                                <button class="btn btn-success" onclick="approveOrder(${data.id}); closeModal('orderModal');">
+                                    ${currentLanguage === 'my' ? 'အတည်ပြုရန်' : 'Approve Order'}
+                                </button>
+                                <button class="btn btn-danger" onclick="rejectOrder(${data.id}); closeModal('orderModal');">
+                                    ${currentLanguage === 'my' ? 'ငြင်းပယ်ရန်' : 'Reject Order'}
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                openModal('orderModal');
+            } catch (error) {
+                console.error('Error loading order details:', error);
+                showMessage('error', 'မှာယူမှု အသေးစိတ် ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load order details');
+            }
+        }
+
+        async function approveOrder(orderId) {
+            try {
+                const { error } = await supabase
+                    .from('orders')
+                    .update({ status: 'approved' })
+                    .eq('id', orderId);
+
+                if (error) throw error;
+
+                showMessage('success', 'မှာယူမှု အတည်ပြုပြီးပါပြီ', 'Order approved successfully');
+                loadOrders();
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error approving order:', error);
+                showMessage('error', 'မှာယူမှု အတည်ပြုခြင်း မအောင်မြင်ပါ', 'Failed to approve order');
+            }
+        }
+
+        async function rejectOrder(orderId) {
+            const reason = prompt(currentLanguage === 'my' ? 'ငြင်းပယ်ရန် အကြောင်းရင်း ရေးပါ:' : 'Please enter rejection reason:');
+            
+            if (!reason) return;
+
+            try {
+                const { error } = await supabase
+                    .from('orders')
+                    .update({ 
+                        status: 'rejected',
+                        rejection_reason: reason
+                    })
+                    .eq('id', orderId);
+
+                if (error) throw error;
+
+                showMessage('success', 'မှာယူမှု ငြင်းပယ်ပြီးပါပြီ', 'Order rejected successfully');
+                loadOrders();
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error rejecting order:', error);
+                showMessage('error', 'မှာယူမှု ငြင်းပယ်ခြင်း မအောင်မြင်ပါ', 'Failed to reject order');
+            }
+        }
+
+        // Refund Management Functions
+        async function processRefund(orderId) {
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select(`
+                        *,
+                        users (full_name, email, phone)
+                    `)
+                    .eq('id', orderId)
+                    .single();
+
+                if (error) throw error;
+
+                const modalContent = document.getElementById('refundModalContent');
+                modalContent.innerHTML = `
+                    <div class="refund-section">
+                        <h3>${currentLanguage === 'my' ? 'ငွေပြန်အမ်းမှု လုပ်ဆောင်ရန်' : 'Process Refund'}</h3>
+                        <div style="margin: 1rem 0;">
+                            <strong>Order #${data.id}</strong><br>
+                            <strong>${currentLanguage === 'my' ? 'ဖောက်သည်:' : 'Customer:'}</strong> ${data.users?.full_name}<br>
+                            <strong>${currentLanguage === 'my' ? 'ပမာဏ:' : 'Amount:'}</strong> ${formatPrice(data.total_amount)}<br>
+                            <strong>${currentLanguage === 'my' ? 'အကြောင်းရင်း:' : 'Reason:'}</strong> ${data.refund_reason}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" data-en="Refund Receipt" data-my="ငွေပြန်အမ်းပြေစာ">ငွေပြန်အမ်းပြေစာ</label>
+                            <div class="file-upload-area" onclick="document.getElementById('refundReceipt').click()">
+                                <div>📄</div>
+                                <div data-en="Upload refund receipt" data-my="ငွေပြန်အမ်းပြေစာ တင်ရန်">ငွေပြန်အမ်းပြေစာ တင်ရန်</div>
+                                <input type="file" id="refundReceipt" accept="image/*" style="display: none;" onchange="handleRefundReceiptUpload(this)">
+                            </div>
+                            <div id="refundReceiptPreview"></div>
+                        </div>
+
+                        <div class="refund-actions">
+                            <button class="btn btn-success" onclick="completeRefund(${data.id})" id="completeRefundBtn" disabled>
+                                ${currentLanguage === 'my' ? 'ငွေပြန်အမ်းမှု ပြီးစီးရန်' : 'Complete Refund'}
+                            </button>
+                            <button class="btn btn-secondary" onclick="closeModal('refundModal')">
+                                ${currentLanguage === 'my' ? 'ပယ်ဖျက်ရန်' : 'Cancel'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                openModal('refundModal');
+            } catch (error) {
+                console.error('Error loading refund details:', error);
+                showMessage('error', 'ငွေပြန်အမ်းမှု အသေးစိတ် ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load refund details');
+            }
+        }
+
+        function handleRefundReceiptUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('refundReceiptPreview');
+                    preview.innerHTML = `
+                        <div style="margin-top: 1rem;">
+                            <img src="${e.target.result}" alt="Refund Receipt" style="max-width: 100%; height: auto; border-radius: 10px;">
+                            <p style="text-align: center; margin-top: 0.5rem; color: green;">✅ ${currentLanguage === 'my' ? 'ပြေစာ တင်ပြီးပါပြီ' : 'Receipt uploaded'}</p>
+                        </div>
+                    `;
+                    document.getElementById('completeRefundBtn').disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function completeRefund(orderId) {
+            const receiptFile = document.getElementById('refundReceipt').files[0];
+            
+            if (!receiptFile) {
+                showMessage('error', 'ကျေးဇူးပြု၍ ငွေပြန်အမ်းပြေစာ တင်ပါ', 'Please upload refund receipt');
+                return;
+            }
+
+            try {
+                // Upload refund receipt
+                const fileExt = receiptFile.name.split('.').pop();
+                const fileName = `refunds/${Date.now()}.${fileExt}`;
+                
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('receipts')
+                    .upload(fileName, receiptFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: urlData } = supabase.storage
+                    .from('receipts')
+                    .getPublicUrl(fileName);
+
+                // Update order status
+                const { error } = await supabase
+                    .from('orders')
+                    .update({ 
+                        status: 'refunded',
+                        refund_receipt_url: urlData.publicUrl,
+                        refunded_at: new Date().toISOString()
+                    })
+                    .eq('id', orderId);
+
+                if (error) throw error;
+
+                showMessage('success', 'ငွေပြန်အမ်းမှု အောင်မြင်စွာ ပြီးစီးပါပြီ', 'Refund completed successfully');
+                closeModal('refundModal');
+                loadRefunds();
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error completing refund:', error);
+                showMessage('error', 'ငွေပြန်အမ်းမှု ပြီးစီးခြင်း မအောင်မြင်ပါ', 'Failed to complete refund');
+            }
+        }
+
+        // Product Management Functions
+        async function editProduct(productId) {
+            // Implement product editing functionality
+            alert(`Edit product ${productId} - Feature coming soon!`);
+        }
+
+        async function deleteProduct(productId) {
+            if (!confirm(currentLanguage === 'my' ? 'ဤပစ္စည်းကို ဖျက်လိုသည်မှာ သေချာပါသလား?' : 'Are you sure you want to delete this product?')) {
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('products')
+                    .update({ status: 'deleted' })
+                    .eq('id', productId);
+
+                if (error) throw error;
+
+                showMessage('success', 'ပစ္စည်း ဖျက်ပြီးပါပြီ', 'Product deleted successfully');
+                loadProducts();
+                loadDashboardData();
+            } catch (error) {
+                console.error('Error deleting product:', error);
+                showMessage('error', 'ပစ္စည်း ဖျက်ခြင်း မအောင်မြင်ပါ', 'Failed to delete product');
+            }
+        }
+
+        // Post Management Functions
+        async function editPost(postId) {
+            // Implement post editing functionality
+            alert(`Edit post ${postId} - Feature coming soon!`);
+        }
+
+        async function deletePost(postId) {
+            if (!confirm(currentLanguage === 'my' ? 'ဤပို့စ်ကို ဖျက်လိုသည်မှာ သေချာပါသလား?' : 'Are you sure you want to delete this post?')) {
+                return;
+            }
+
+            try {
+                const { error } = await supabase
+                    .from('posts')
+                    .update({ status: 'deleted' })
+                    .eq('id', postId);
+
+                if (error) throw error;
+
+                showMessage('success', 'ပို့စ် ဖျက်ပြီးပါပြီ', 'Post deleted successfully');
+                loadPosts();
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                showMessage('error', 'ပို့စ် ဖျက်ခြင်း မအောင်မြင်ပါ', 'Failed to delete post');
+            }
+        }
+
+        // User Management Functions
+        async function viewUserDetails(userId) {
+            try {
+                const { data: user, error: userError } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', userId)
+                    .single();
+
+                if (userError) throw userError;
+
+                const { data: orders, error: ordersError } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('user_id', userId);
+
+                if (ordersError) throw ordersError;
+
+                const totalSpent = orders
+                    .filter(order => order.status === 'approved')
+                    .reduce((sum, order) => sum + order.total_amount, 0);
+
+                alert(`${user.full_name}\n\n${currentLanguage === 'my' ? 'အီးမေးလ်:' : 'Email:'} ${user.email}\n${currentLanguage === 'my' ? 'ဖုန်း:' : 'Phone:'} ${user.phone || 'N/A'}\n${currentLanguage === 'my' ? 'မှာယူမှုများ:' : 'Orders:'} ${orders.length}\n${currentLanguage === 'my' ? 'စုစုပေါင်း သုံးစွဲမှု:' : 'Total Spent:'} ${formatPrice(totalSpent)}\n${currentLanguage === 'my' ? 'ပါဝင်သည့်ရက်:' : 'Joined:'} ${formatDate(user.created_at)}`);
+            } catch (error) {
+                console.error('Error loading user details:', error);
+                showMessage('error', 'အသုံးပြုသူ အသေးစိတ် ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load user details');
+            }
+        }
+
+        // Search and Filter Functions
+        function setupEventListeners() {
+            // Order search
+            document.getElementById('orderSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const filteredOrders = allOrders.filter(order => 
+                    order.id.toString().includes(searchTerm) ||
+                    (order.users?.full_name || '').toLowerCase().includes(searchTerm) ||
+                    (order.users?.email || '').toLowerCase().includes(searchTerm)
+                );
+                displayOrders(filteredOrders);
+            });
+
+            // Order status filter
+            document.getElementById('orderStatusFilter').addEventListener('change', function() {
+                const status = this.value;
+                const filteredOrders = status ? allOrders.filter(order => order.status === status) : allOrders;
+                displayOrders(filteredOrders);
+            });
+
+            // Product search
+            document.getElementById('productSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const filteredProducts = allProducts.filter(product => 
+                    product.title.toLowerCase().includes(searchTerm) ||
+                    (product.title_en || '').toLowerCase().includes(searchTerm) ||
+                    product.description.toLowerCase().includes(searchTerm)
+                );
+                displayProducts(filteredProducts);
+            });
+
+            // Product category filter
+            document.getElementById('productCategoryFilter').addEventListener('change', function() {
+                const category = this.value;
+                const filteredProducts = category ? allProducts.filter(product => product.category === category) : allProducts;
+                displayProducts(filteredProducts);
+            });
+
+            // User search
+            document.getElementById('userSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const filteredUsers = allUsers.filter(user => 
+                    user.full_name.toLowerCase().includes(searchTerm) ||
+                    user.email.toLowerCase().includes(searchTerm)
+                );
+                displayUsers(filteredUsers);
+            });
+
+            // Refund search
+            document.getElementById('refundSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                loadRefunds(); // Reload with search term
+            });
+
+            // Post search
+            document.getElementById('postSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const filteredPosts = allPosts.filter(post => 
+                    post.title.toLowerCase().includes(searchTerm) ||
+                    (post.title_en || '').toLowerCase().includes(searchTerm) ||
+                    post.content.toLowerCase().includes(searchTerm)
+                );
+                displayPosts(filteredPosts);
+            });
+        }
+
+        // Real-time Functions
+        function setupRealtimeSubscriptions() {
+            // Subscribe to orders changes
+            supabase
+                .channel('orders')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+                    if (currentSection === 'orders' || currentSection === 'dashboard') {
+                        loadOrders();
+                        loadDashboardData();
+                    }
+                    if (currentSection === 'refunds') {
+                        loadRefunds();
+                    }
+                })
+                .subscribe();
+
+            // Subscribe to products changes
+            supabase
+                .channel('products')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
+                    if (currentSection === 'products' || currentSection === 'dashboard') {
+                        loadProducts();
+                        loadDashboardData();
+                    }
+                })
+                .subscribe();
+
+            // Subscribe to posts changes
+            supabase
+                .channel('posts')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, (payload) => {
+                    if (currentSection === 'posts') {
+                        loadPosts();
+                    }
+                })
+                .subscribe();
+
+            // Subscribe to users changes
+            supabase
+                .channel('users')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, (payload) => {
+                    if (currentSection === 'users' || currentSection === 'dashboard') {
+                        loadUsers();
+                        loadDashboardData();
+                    }
+                })
+                .subscribe();
+        }
+
+        // Language Functions
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'my' ? 'en' : 'my';
+            document.getElementById('langToggle').textContent = currentLanguage === 'my' ? 'EN' : 'မြန်မာ';
+            updateLanguage();
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-en]').forEach(element => {
+                if (currentLanguage === 'en') {
+                    element.textContent = element.dataset.en;
+                } else {
+                    element.textContent = element.dataset.my;
+                }
+            });
+
+            document.querySelectorAll('[data-en-placeholder]').forEach(element => {
+                if (currentLanguage === 'en') {
+                    element.placeholder = element.dataset.enPlaceholder;
+                } else {
+                    element.placeholder = element.dataset.myPlaceholder;
+                }
+            });
+
+            // Update select options
+            document.querySelectorAll('option[data-en]').forEach(option => {
+                if (currentLanguage === 'en') {
+                    option.textContent = option.dataset.en;
+                } else {
+                    option.textContent = option.dataset.my;
+                }
+            });
+
+            // Reload current section data
+            switch(currentSection) {
+                case 'orders':
+                    displayOrders(allOrders);
+                    break;
+                case 'products':
+                    displayProducts(allProducts);
+                    break;
+                case 'users':
+                    displayUsers(allUsers);
+                    break;
+                case 'posts':
+                    displayPosts(allPosts);
+                    break;
+                case 'analytics':
+                    loadAnalytics();
+                    break;
+            }
+        }
+
+        // Utility Functions
+        function formatPrice(price) {
+            return new Intl.NumberFormat('my-MM').format(price) + ' ကျပ်';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('my-MM');
+        }
+
+        function getStatusText(status) {
+            const statusTexts = {
+                'pending': currentLanguage === 'my' ? 'စောင့်ဆိုင်းနေသည်' : 'Pending',
+                'approved': currentLanguage === 'my' ? 'အတည်ပြုပြီး' : 'Approved',
+                'rejected': currentLanguage === 'my' ? 'ငြင်းပယ်ပြီး' : 'Rejected',
+                'refund_requested': currentLanguage === 'my' ? 'ငွေပြန်အမ်းတောင်းခံထား' : 'Refund Requested',
+                'refunded': currentLanguage === 'my' ? 'ငွေပြန်အမ်းပြီး' : 'Refunded',
+                'active': currentLanguage === 'my' ? 'အသုံးပြုနေသည်' : 'Active',
+                'deleted': currentLanguage === 'my' ? 'ဖျက်ပြီး' : 'Deleted'
+            };
+            return statusTexts[status] || status;
+        }
+
+        function getCategoryText(category) {
+            const categoryTexts = {
+                'electronics': currentLanguage === 'my' ? 'အီလက်ထရွန်းနစ်' : 'Electronics',
+                'fashion': currentLanguage === 'my' ? 'ဖက်ရှင်' : 'Fashion',
+                'home': currentLanguage === 'my' ? 'အိမ်နှင့် ဥယျာဉ်' : 'Home & Garden',
+                'sports': currentLanguage === 'my' ? 'အားကစား' : 'Sports',
+                'books': currentLanguage === 'my' ? 'စာအုပ်များ' : 'Books'
+            };
+            return categoryTexts[category] || category;
+        }
+
+        function showLoading(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <div>${currentLanguage === 'my' ? 'ရယူနေသည်...' : 'Loading...'}</div>
+                </div>
+            `;
+        }
+
+        function showError(containerId, messageMy, messageEn) {
+            const container = document.getElementById(containerId);
+            const message = currentLanguage === 'my' ? messageMy : messageEn;
+            container.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: #dc3545;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+
+        function showMessage(type, messageMy, messageEn) {
+            const message = currentLanguage === 'my' ? messageMy : messageEn;
+            
+            // Create message element
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${type}`;
+            messageEl.textContent = message;
+            
+            // Insert at top of main content
+            const mainContent = document.querySelector('.main-content');
+            mainContent.insertBefore(messageEl, mainContent.firstChild);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                messageEl.remove();
+            }, 5000);
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
