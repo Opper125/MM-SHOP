@@ -1,1752 +1,504 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Myanmar Shopping Mall - မြန်မာ အွန်လိုင်း ဈေးဆိုင်</title>
+    <title>SalesVision Pro - Competitor Analysis & Market Intelligence</title>
+    <meta name="description" content="Advanced sales analytics platform for competitor pricing analysis, market trends, and business intelligence reporting.">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="SalesVision Pro - Sales Analytics Platform">
+    <meta property="og:description" content="Comprehensive competitor analysis and market intelligence for sales teams">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-color: #ff6b35;
-            --secondary-color: #004e89;
-            --accent-color: #ffd23f;
-            --text-color: #333;
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --shadow: 0 4px 20px rgba(0,0,0,0.1);
-            --gradient: linear-gradient(135deg, #ff6b35, #f7931e);
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* Loading Animation */
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #ff6b35, #004e89);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            transition: opacity 0.5s ease;
-        }
-
-        .loading.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Message Container - Fixed at top */
-        .message-container {
-            position: fixed;
-            top: 80px; /* Adjusted to be below the fixed header */
-            left: 0;
-            right: 0;
-            z-index: 1500;
-            padding: 0 1rem;
-            pointer-events: none; /* Allows clicks to pass through the container */
-        }
-
-        .message {
-            padding: 1rem 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 0.5rem; /* Space between messages if multiple appear */
-            font-weight: 600;
-            box-shadow: var(--shadow);
-            animation: slideDown 0.3s ease;
-            pointer-events: auto; /* Messages themselves are clickable if needed */
-            max-width: 600px; /* Optional: constrain width */
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .message.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        /* Header */
-        .header {
-            background: var(--gradient);
-            color: white;
-            padding: 1rem 0;
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-            box-shadow: var(--shadow);
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 1rem; /* Reduced padding for smaller screens */
-        }
-
-        .logo {
-            font-size: 1.5rem; /* Slightly smaller logo */
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-        }
-
-        .nav-menu {
-            display: flex;
-            gap: 1rem; /* Spacing between nav items */
-            align-items: center;
-            flex-wrap: wrap; /* Allow items to wrap on smaller screens */
-        }
-
-        .nav-item {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            font-size: 0.9rem; /* Smaller font for nav items */
-            white-space: nowrap; /* Prevent text wrapping within item */
-        }
-
-        .nav-item:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-2px);
-        }
-        
-        .cart-icon {
-            position: relative;
-            cursor: pointer;
-            padding: 0.5rem; /* Padding around the icon */
-            border-radius: 50%; /* Make it circular */
-            transition: all 0.3s ease;
-        }
-
-        .cart-icon:hover {
-            background: rgba(255,255,255,0.2);
-            transform: scale(1.1); /* Slight zoom on hover */
-        }
-
-        .cart-count {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--accent-color);
-            color: var(--text-color);
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .language-toggle {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-        .language-toggle:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        /* Mobile Menu Toggle */
-        .mobile-menu-toggle {
-            display: none; /* Hidden by default */
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-top: 80px; /* Account for fixed header height */
-            padding: 2rem 1rem;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Hero Section */
-        .hero {
-            background: var(--gradient);
-            color: white;
-            padding: 3rem 2rem;
-            text-align: center;
-            border-radius: 20px;
-            margin-bottom: 3rem;
-            position: relative;
-            overflow: hidden;
-        }
-        .hero::before { /* Subtle grain texture */
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            opacity: 0.3;
-        }
-        .hero-content {
-            position: relative;
-            z-index: 1;
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            animation: fadeInUp 1s ease;
-        }
-        .hero p {
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            animation: fadeInUp 1s ease 0.2s both; /* 'both' keeps final state */
-        }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Search Bar */
-        .search-container {
-            margin-bottom: 3rem;
-            display: flex;
-            justify-content: center;
-        }
-        .search-bar {
-            display: flex;
-            background: white;
-            border-radius: 50px;
-            padding: 0.5rem;
-            box-shadow: var(--shadow);
-            width: 100%;
-            max-width: 500px;
-        }
-        .search-input {
-            flex: 1;
-            border: none;
-            padding: 1rem 1.5rem;
-            border-radius: 50px;
-            font-size: 1rem;
-            outline: none;
-        }
-        .search-btn {
-            background: var(--gradient);
-            border: none;
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 60px; /* Ensure button has some width */
-        }
-        .search-btn:hover {
-            transform: scale(1.05);
-        }
-
-        /* Categories */
-        .categories {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 3rem;
-            overflow-x: auto; /* Allow horizontal scrolling */
-            padding: 1rem 0; /* Padding for scrollbar visibility */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE 10+ */
-        }
-        .categories::-webkit-scrollbar { /* WebKit */
-            display: none;
-        }
-        .category-btn {
-            background: white;
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 0.8rem 1.5rem;
-            border-radius: 50px;
-            cursor: pointer;
-            white-space: nowrap; /* Prevent text wrapping */
-            transition: all 0.3s ease;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        .category-btn:hover, .category-btn.active {
-            background: var(--primary-color);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: var(--shadow);
-        }
-
-        /* Products Grid */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 3rem;
-        }
-        .product-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            position: relative; /* For potential absolute positioned elements inside */
-        }
-        .product-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-        .product-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-        .product-card:hover .product-image {
-            transform: scale(1.05);
-        }
-        .product-info {
-            padding: 1.5rem;
-        }
-        .product-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: var(--text-color);
-            line-height: 1.3; /* Prevent overly tall titles */
-        }
-        .product-description {
-            color: #666;
-            margin-bottom: 1rem;
-            line-height: 1.5;
-            font-size: 0.9rem;
-        }
-        .product-price {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        .product-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap; /* Allow buttons to wrap */
-        }
-        .btn {
-            padding: 0.7rem 1.2rem;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            flex: 1; /* Make buttons take equal space if wrapping */
-            min-width: 120px; /* Minimum width for buttons */
-        }
-        .btn-primary {
-            background: var(--gradient);
-            color: white;
-        }
-        .btn-secondary {
-            background: transparent;
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow);
-        }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #e55a2b, #e0841a); /* Darker gradient on hover */
-        }
-        .btn-secondary:hover {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        /* Posts Section */
-        .posts-section {
-            margin-top: 4rem;
-        }
-        .section-title {
-            font-size: 2rem;
-            text-align: center;
-            margin-bottom: 2rem;
-            color: var(--text-color);
-        }
-        .posts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 2rem;
-        }
-        .post-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-        }
-        .post-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        }
-        .post-media {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-        .post-content {
-            padding: 1.5rem;
-        }
-        .post-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        .post-text {
-            color: #666;
-            line-height: 1.6;
-            font-size: 0.9rem;
-        }
-        .post-time {
-            color: #999;
-            font-size: 0.8rem;
-            margin-top: 1rem;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8); /* Semi-transparent background */
-            z-index: 2000;
-            animation: fadeIn 0.3s ease;
-        }
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem; /* Padding for smaller screens */
-        }
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 2rem;
-            max-width: 500px;
-            width: 100%;
-            max-height: 90vh; /* Max height for scrollability */
-            overflow-y: auto; /* Enable scroll if content overflows */
-            animation: slideIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #999;
-            padding: 0.5rem; /* Easier to click */
-        }
-        .close-btn:hover {
-            color: var(--text-color);
-        }
-
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        .form-input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-        .form-textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        /* Cart Styles */
-        .cart-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        .cart-item-image {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-        .cart-item-info {
-            flex: 1;
-        }
-        .cart-item-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            font-size: 0.9rem;
-        }
-        .cart-item-price {
-            color: var(--primary-color);
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        .quantity-controls {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .quantity-btn {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
-        .quantity-display {
-            min-width: 30px;
-            text-align: center;
-            font-weight: bold;
-        }
-        .cart-total {
-            padding: 1rem;
-            border-top: 2px solid var(--primary-color);
-            text-align: center;
-        }
-        .total-amount {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        /* Payment Styles */
-        .payment-methods {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .payment-method {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 1rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .payment-method:hover, .payment-method.selected {
-            border-color: var(--primary-color);
-            background: rgba(255, 107, 53, 0.1);
-        }
-        .file-upload {
-            border: 2px dashed #e0e0e0;
-            border-radius: 10px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .file-upload:hover {
-            border-color: var(--primary-color);
-            background: rgba(255, 107, 53, 0.05);
-        }
-
-        /* Order Status */
-        .order-status {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-approved { background: #d4edda; color: #155724; }
-        .status-rejected { background: #f8d7da; color: #721c24; }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .nav-container {
-                padding: 0 1rem;
-            }
-            .nav-menu {
-                display: none; /* Hide full menu */
-                position: absolute;
-                top: 100%; /* Position below header */
-                left: 0;
-                right: 0;
-                background: var(--gradient);
-                flex-direction: column;
-                padding: 1rem;
-                gap: 0.5rem;
-            }
-            .nav-menu.show { /* Class to show mobile menu */
-                display: flex;
-            }
-            .mobile-menu-toggle {
-                display: block; /* Show hamburger icon */
-            }
-            .logo { font-size: 1.3rem; }
-            .hero h1 { font-size: 2rem; }
-            .hero p { font-size: 1rem; }
-            .hero { padding: 2rem 1rem; }
-            .main-content { padding: 1rem; }
-            .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 1rem;
-            }
-            .posts-grid {
-                grid-template-columns: 1fr; /* Single column for posts */
-                gap: 1rem;
-            }
-            .categories { gap: 0.5rem; }
-            .category-btn { padding: 0.7rem 1.2rem; font-size: 0.8rem; }
-            .product-actions { flex-direction: column; } /* Stack buttons */
-            .btn { min-width: auto; } /* Allow buttons to shrink */
-            .modal-content { padding: 1.5rem; margin: 1rem; }
-            .search-bar { margin: 0 1rem; } /* Add horizontal margin */
-            .search-input { padding: 0.8rem 1rem; }
-            .search-btn { padding: 0.8rem 1rem; }
-            .cart-item { flex-wrap: wrap; gap: 0.5rem; }
-            .cart-item-image { width: 50px; height: 50px; }
-            .payment-methods { grid-template-columns: 1fr; } /* Stack payment methods */
-        }
-
-        @media (max-width: 480px) {
-            .products-grid { grid-template-columns: 1fr; } /* Single column for products */
-            .hero h1 { font-size: 1.8rem; }
-            .section-title { font-size: 1.5rem; }
-            .product-info { padding: 1rem; }
-            .modal-content { padding: 1rem; }
-        }
-
-        /* Loading states */
-        .loading-state {
-            text-align: center;
-            padding: 3rem;
-            color: #666;
-        }
-        .loading-spinner-small {
-            width: 30px;
-            height: 30px;
-            border: 3px solid #e0e0e0;
-            border-top: 3px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        /* Empty states */
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #666;
-        }
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-    </style>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Loading Screen -->
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
-    </div>
-
-    <!-- Message Container -->
-    <div class="message-container" id="messageContainer"></div>
-
-    <!-- Header -->
-    <header class="header">
-        <div class="nav-container">
-            <a href="#" class="logo" data-en="Myanmar Mall" data-my="မြန်မာ မော်လ်">မြန်မာ မော်လ်</a>
-            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
-            <nav class="nav-menu" id="navMenu">
-                <a href="#" class="nav-item" data-en="Home" data-my="ပင်မ">ပင်မ</a>
-                <a href="#" class="nav-item" data-en="Products" data-my="ပစ္စည်းများ">ပစ္စည်းများ</a>
-                <a href="#" class="nav-item" data-en="Posts" data-my="ပို့စ်များ">ပို့စ်များ</a>
-                <div class="cart-icon" onclick="openCart()">
-                    🛒
-                    <span class="cart-count" id="cartCount">0</span>
-                </div>
-                <a href="#" class="nav-item" onclick="openOrders()" id="ordersBtn" data-en="My Orders" data-my="ကျွန်ုပ်၏ မှာယူမှုများ" style="display: none;">ကျွန်ုပ်၏ မှာယူမှုများ</a>
-                <button class="language-toggle" onclick="toggleLanguage()" id="langToggle">EN</button>
-                <a href="#" class="nav-item" onclick="openAuth()" id="authBtn" data-en="Login" data-my="ဝင်ရောက်ရန်">ဝင်ရောက်ရန်</a>
-            </nav>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-content">
-                <h1 data-en="Welcome to Myanmar Shopping Mall" data-my="မြန်မာ အွန်လိုင်း ဈေးဆိုင်သို့ ကြိုဆိုပါတယ်">မြန်မာ အွန်လိုင်း ဈေးဆိုင်သို့ ကြိုဆိုပါတယ်</h1>
-                <p data-en="Discover amazing products and connect with our community" data-my="အံ့သြဖွယ် ပစ္စည်းများကို ရှာဖွေပြီး ကျွန်ုပ်တို့ အသိုင်းအဝိုင်းနှင့် ချိတ်ဆက်ပါ">အံ့သြဖွယ် ပစ္စည်းများကို ရှာဖွေပြီး ကျွန်ုပ်တို့ အသိုင်းအဝိုင်းနှင့် ချိတ်ဆက်ပါ</p>
-            </div>
-        </section>
-
-        <!-- Search Bar -->
-        <div class="search-container">
-            <div class="search-bar">
-                <input type="text" class="search-input" id="searchInput" placeholder="ပစ္စည်းများ ရှာဖွေရန်..." data-en-placeholder="Search products..." data-my-placeholder="ပစ္စည်းများ ရှာဖွေရန်...">
-                <button class="search-btn" onclick="searchProducts()">
-                    🔍
-                </button>
-            </div>
-        </div>
-
-        <!-- Categories -->
-        <div class="categories" id="categories">
-            <button class="category-btn active" data-category="all" data-en="All" data-my="အားလုံး">အားလုံး</button>
-            <button class="category-btn" data-category="electronics" data-en="Electronics" data-my="အီလက်ထရွန်းနစ်">အီလက်ထရွန်းနစ်</button>
-            <button class="category-btn" data-category="fashion" data-en="Fashion" data-my="ဖက်ရှင်">ဖက်ရှင်</button>
-            <button class="category-btn" data-category="home" data-en="Home & Garden" data-my="အိမ်နှင့် ဥယျာဉ်">အိမ်နှင့် ဥယျာဉ်</button>
-            <button class="category-btn" data-category="sports" data-en="Sports" data-my="အားကစား">အားကစား</button>
-            <button class="category-btn" data-category="books" data-en="Books" data-my="စာအုပ်များ">စာအုပ်များ</button>
-        </div>
-
-        <!-- Products Grid -->
-        <div class="products-grid" id="productsGrid">
-            <!-- Products will be loaded here -->
-            <div class="loading-state">
-                <div class="loading-spinner-small"></div>
-                <p data-en="Loading products..." data-my="ပစ္စည်းများ ရယူနေသည်...">ပစ္စည်းများ ရယူနေသည်...</p>
-            </div>
-        </div>
-
-        <!-- Posts Section -->
-        <section class="posts-section">
-            <h2 class="section-title" data-en="Community Posts" data-my="အသိုင်းအဝိုင်း ပို့စ်များ">အသိုင်းအဝိုင်း ပို့စ်များ</h2>
-            <div class="posts-grid" id="postsGrid">
-                <!-- Posts will be loaded here -->
-                <div class="loading-state">
-                    <div class="loading-spinner-small"></div>
-                    <p data-en="Loading posts..." data-my="ပို့စ်များ ရယူနေသည်...">ပို့စ်များ ရယူနေသည်...</p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Authentication Modal -->
-    <div class="modal" id="authModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="authTitle" data-en="Login" data-my="ဝင်ရောက်ရန်">ဝင်ရောက်ရန်</h2>
-                <button class="close-btn" onclick="closeModal('authModal')">&times;</button>
-            </div>
-            <div id="authContent">
-                <!-- Login Form -->
-                <div id="loginForm">
-                    <div class="form-group">
-                        <label class="form-label" data-en="Email" data-my="အီးမေးလ်">အီးမေးလ်</label>
-                        <input type="email" class="form-input" id="loginEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" data-en="Password" data-my="စကားဝှက်">စကားဝှက်</label>
-                        <input type="password" class="form-input" id="loginPassword" required>
-                    </div>
-                    <button class="btn btn-primary" onclick="login()" style="width: 100%; margin-bottom: 1rem;" data-en="Login" data-my="ဝင်ရောက်ရန်">ဝင်ရောက်ရန်</button>
-                    <p style="text-align: center;">
-                        <span data-en="Don't have an account?" data-my="အကောင့်မရှိသေးဘူးလား?">အကောင့်မရှိသေးဘူးလား?</span>
-                        <a href="#" onclick="showRegister()" style="color: var(--primary-color);" data-en="Register" data-my="စာရင်းသွင်းရန်">စာရင်းသွင်းရန်</a>
-                    </p>
-                </div>
-
-                <!-- Register Form -->
-                <div id="registerForm" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label" data-en="Full Name" data-my="အမည်အပြည့်အစုံ">အမည်အပြည့်အစုံ</label>
-                        <input type="text" class="form-input" id="registerName" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" data-en="Email" data-my="အီးမေးလ်">အီးမေးလ်</label>
-                        <input type="email" class="form-input" id="registerEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" data-en="Phone" data-my="ဖုန်းနံပါတ်">ဖုန်းနံပါတ်</label>
-                        <input type="tel" class="form-input" id="registerPhone" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" data-en="Password" data-my="စကားဝှက်">စကားဝှက်</label>
-                        <input type="password" class="form-input" id="registerPassword" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" data-en="Confirm Password" data-my="စကားဝှက် အတည်ပြုရန်">စကားဝှက် အတည်ပြုရန်</label>
-                        <input type="password" class="form-input" id="confirmPassword" required>
-                    </div>
-                    <button class="btn btn-primary" onclick="register()" style="width: 100%; margin-bottom: 1rem;" data-en="Register" data-my="စာရင်းသွင်းရန်">စာရင်းသွင်းရန်</button>
-                    <p style="text-align: center;">
-                        <span data-en="Already have an account?" data-my="အကောင့်ရှိပြီးသားလား?">အကောင့်ရှိပြီးသားလား?</span>
-                        <a href="#" onclick="showLogin()" style="color: var(--primary-color);" data-en="Login" data-my="ဝင်ရောက်ရန်">ဝင်ရောက်ရန်</a>
-                    </p>
-                </div>
-            </div>
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading SalesVision Pro...</p>
         </div>
     </div>
 
-    <!-- Cart Modal -->
-    <div class="modal" id="cartModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" data-en="Shopping Cart" data-my="ဈေးဝယ်ခြင်း">ဈေးဝယ်ခြင်း</h2>
-                <button class="close-btn" onclick="closeModal('cartModal')">&times;</button>
-            </div>
-            <div id="cartItems">
-                <!-- Cart items will be loaded here -->
-            </div>
-            <div class="cart-total">
-                <div class="total-amount" id="cartTotal">0 ကျပ်</div>
-                <button class="btn btn-primary" onclick="proceedToCheckout()" style="width: 100%; margin-top: 1rem;" data-en="Proceed to Checkout" data-my="ငွေချေရန်">ငွေချေရန်</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Checkout Modal -->
-    <div class="modal" id="checkoutModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" data-en="Checkout" data-my="ငွေချေရန်">ငွေချေရန်</h2>
-                <button class="close-btn" onclick="closeModal('checkoutModal')">&times;</button>
-            </div>
-            <div id="checkoutContent">
-                <!-- Shipping Address -->
-                <div class="form-group">
-                    <label class="form-label" data-en="Full Name" data-my="အမည်အပြည့်အစုံ">အမည်အပြည့်အစုံ</label>
-                    <input type="text" class="form-input" id="shippingName" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" data-en="Phone Number" data-my="ဖုန်းနံပါတ်">ဖုန်းနံပါတ်</label>
-                    <input type="tel" class="form-input" id="shippingPhone" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" data-en="Address" data-my="လိပ်စာ">လိပ်စာ</label>
-                    <textarea class="form-input form-textarea" id="shippingAddress" required placeholder="အိမ်အမှတ်၊ လမ်း၊ ရပ်ကွက်၊ မြို့နယ်"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" data-en="City" data-my="မြို့">မြို့</label>
-                    <input type="text" class="form-input" id="shippingCity" required>
-                </div>
-
-                <!-- Payment Methods -->
-                <div class="form-group">
-                    <label class="form-label" data-en="Payment Method" data-my="ငွေပေးချေမှု နည်းလမ်း">ငွေပေးချေမှု နည်းလမ်း</label>
-                    <div class="payment-methods">
-                        <div class="payment-method" data-method="kpay" onclick="selectPaymentMethod('kpay')">
-                            <div>💳</div>
-                            <div>KPay</div>
-                        </div>
-                        <div class="payment-method" data-method="wave" onclick="selectPaymentMethod('wave')">
-                            <div>📱</div>
-                            <div>Wave Money</div>
-                        </div>
-                        <div class="payment-method" data-method="aya" onclick="selectPaymentMethod('aya')">
-                            <div>🏦</div>
-                            <div>AYA Pay</div>
-                        </div>
+    <!-- Main Application -->
+    <div id="app" class="app" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo">
+                        <i class="fas fa-chart-line"></i>
+                        <span>SalesVision Pro</span>
                     </div>
+                    <nav class="nav-menu">
+                        <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboard
+                        </a>
+                        <a href="#competitors" class="nav-item" data-section="competitors">
+                            <i class="fas fa-users"></i>
+                            Competitors
+                        </a>
+                        <a href="#pricing" class="nav-item" data-section="pricing">
+                            <i class="fas fa-dollar-sign"></i>
+                            Pricing
+                        </a>
+                        <a href="#trends" class="nav-item" data-section="trends">
+                            <i class="fas fa-trending-up"></i>
+                            Market Trends
+                        </a>
+                        <a href="#reports" class="nav-item" data-section="reports">
+                            <i class="fas fa-file-alt"></i>
+                            Reports
+                        </a>
+                    </nav>
                 </div>
-
-                <!-- Payment Details -->
-                <div id="paymentDetails" style="display: none;">
-                    <div class="message info">
-                        <div data-en="Please transfer to:" data-my="ကျေးဇူးပြု၍ လွှဲပေးပါ:">ကျေးဇူးပြု၍ လွှဲပေးပါ:</div>
-                        <div id="paymentNumber" style="font-weight: bold; font-size: 1.2rem; margin-top: 0.5rem;"></div>
-                        <div data-en="Amount:" data-my="ပမာဏ:">ပမာဏ: <span id="paymentAmount"></span></div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search products, competitors..." id="global-search">
                     </div>
-
-                    <!-- Receipt Upload -->
-                    <div class="form-group">
-                        <label class="form-label" data-en="Upload Payment Receipt" data-my="ငွေလွှဲပြေစာ တင်ရန်">ငွေလွှဲပြေစာ တင်ရန်</label>
-                        <div class="file-upload" onclick="document.getElementById('receiptFile').click()">
-                            <div>📄</div>
-                            <div data-en="Click to upload receipt" data-my="ပြေစာ တင်ရန် နှိပ်ပါ">ပြေစာ တင်ရန် နှိပ်ပါ</div>
-                            <input type="file" id="receiptFile" accept="image/*" style="display: none;" onchange="handleReceiptUpload(this)">
-                        </div>
-                        <div id="receiptPreview"></div>
-                    </div>
-
-                    <button class="btn btn-primary" onclick="submitOrder()" style="width: 100%;" data-en="Submit Order" data-my="မှာယူမှု တင်ရန်">မှာယူမှု တင်ရန်</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Order Status Modal -->
-    <div class="modal" id="orderModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" data-en="My Orders" data-my="ကျွန်ုပ်၏ မှာယူမှုများ">ကျွန်ုပ်၏ မှာယူမှုများ</h2>
-                <button class="close-btn" onclick="closeModal('orderModal')">&times;</button>
-            </div>
-            <div id="ordersList">
-                <!-- Orders will be loaded here -->
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Supabase Configuration
-        const SUPABASE_URL = 'https://uwuztdwbjwkuoqmclcpq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3dXp0ZHdiandrdW9xbWNsY3BxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDc3MzIsImV4cCI6MjA2MzUyMzczMn0.79WzYhDz-v80SbhOWEIegtSJKO6AtBcLN5REasUz1CI';
-        
-        let supabase = null;
-        
-        if (SUPABASE_URL && SUPABASE_ANON_KEY) {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } else {
-            console.warn("Supabase URL/Key not provided. App will run with sample data and limited functionality.");
-        }
-
-        // Global Variables
-        let currentUser = null;
-        let currentLanguage = 'my';
-        let cart = [];
-        let products = [];
-        let posts = [];
-        let selectedPaymentMethod = null;
-        let paymentNumbers = {
-            kpay: '09xxxxxxxxx', 
-            wave: '09xxxxxxxxx', 
-            aya: '09xxxxxxxxx'
-        };
-
-        // Initialize App
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                document.getElementById('loading').classList.add('hidden');
-            }, 1500);
-
-            loadProducts();
-            loadPosts();
-            setupCategoryFilters();
-            if (supabase) {
-                checkAuthState(); 
-                loadPaymentNumbers(); 
-            } else {
-                updateAuthUI(); 
-                loadCart(); 
-            }
-            setupEventListeners();
-            updateLanguage(); 
-        });
-
-        // Event Listeners
-        function setupEventListeners() {
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') searchProducts();
-            });
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('modal')) {
-                    e.target.classList.remove('show');
-                    document.body.style.overflow = 'auto';
-                }
-            });
-            ['loginEmail', 'loginPassword'].forEach(id => {
-                document.getElementById(id).addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
-            });
-             ['registerName', 'registerEmail', 'registerPhone', 'registerPassword', 'confirmPassword'].forEach(id => {
-                document.getElementById(id).addEventListener('keypress', e => { if (e.key === 'Enter') register(); });
-            });
-        }
-
-        // Mobile Menu Toggle
-        function toggleMobileMenu() {
-            document.getElementById('navMenu').classList.toggle('show');
-        }
-
-        // Authentication Functions
-        async function login() {
-            if (!supabase) {
-                showMessage('error', 'ဒေတာဘေ့စ် ချိတ်ဆက်မှု မရှိပါ', 'Database connection not available.');
-                return;
-            }
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-
-            if (!email || !password) {
-                showMessage('error', 'ကျေးဇူးပြု၍ အီးမေးလ်နှင့် စကားဝှက် ရေးပါ', 'Please enter email and password');
-                return;
-            }
-
-            try {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) throw error;
-                closeModal('authModal');
-                showMessage('success', 'အောင်မြင်စွာ ဝင်ရောက်ပါတယ်', 'Successfully logged in');
-            } catch (error) {
-                console.error('Login error:', error);
-                showMessage('error', 'ဝင်ရောက်မှု မအောင်မြင်ပါ: ' + error.message, 'Login failed: ' + error.message);
-            }
-        }
-
-        async function register() {
-            if (!supabase) {
-                showMessage('error', 'ဒေတာဘေ့စ် ချိတ်ဆက်မှု မရှိပါ', 'Database connection not available.');
-                return;
-            }
-            const name = document.getElementById('registerName').value.trim();
-            const email = document.getElementById('registerEmail').value.trim();
-            const phone = document.getElementById('registerPhone').value.trim();
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (!name || !email || !phone || !password || !confirmPassword) {
-                showMessage('error', 'ကျေးဇူးပြု၍ အချက်လက်အားလုံး ဖြည့်ပါ', 'Please fill all fields');
-                return;
-            }
-            if (password !== confirmPassword) {
-                showMessage('error', 'စကားဝှက်များ မတူညီပါ', 'Passwords do not match');
-                return;
-            }
-            if (password.length < 6) {
-                showMessage('error', 'စကားဝှက် အနည်းဆုံး ၆ လုံး ရှိရမည်', 'Password must be at least 6 characters');
-                return;
-            }
-
-            try {
-                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: { full_name: name, phone: phone }
-                    }
-                });
-
-                if (signUpError) {
-                    if (signUpError.message.includes("User already registered") || signUpError.message.includes("already exists")) {
-                         showMessage('error', 'ဤအီးမေးလ်ဖြင့် အကောင့်ဖွင့်ပြီးသားဖြစ်သည်', 'An account with this email already exists.');
-                    } else {
-                        throw signUpError;
-                    }
-                    return;
-                }
-                
-                if (signUpData.user) {
-                     const { error: profileError } = await supabase
-                        .from('users')
-                        .insert([{ id: signUpData.user.id, email: email, full_name: name, phone: phone }]);
-                    
-                    if (profileError) {
-                        console.error('Profile creation error:', profileError);
-                        showMessage('error', 'အကောင့် အချက်အလက်သိမ်းဆည်းရာတွင် အမှားဖြစ်သွားသည်', 'Failed to save profile information. Please contact support.');
-                        return;
-                    }
-                }
-                
-                showMessage('success', 'အကောင့်ဖွင့်ခြင်း အောင်မြင်ပါတယ်။ ကျေးဇူးပြု၍ ဝင်ရောက်ပါ။', 'Registration successful. Please log in.');
-                showLogin();
-
-            } catch (error) {
-                console.error('Registration error:', error);
-                showMessage('error', 'အကောင့်ဖွင့်ခြင်း မအောင်မြင်ပါ: ' + error.message, 'Registration failed: ' + error.message);
-            }
-        }
-
-        async function logout() {
-            if (!supabase) return;
-            try {
-                const { error } = await supabase.auth.signOut();
-                if (error) throw error;
-                showMessage('success', 'အောင်မြင်စွာ ထွက်ခွာပါတယ်', 'Successfully logged out');
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-        }
-
-        function checkAuthState() {
-            if (!supabase) return;
-            supabase.auth.getSession().then(({ data: { session } }) => {
-                currentUser = session?.user ?? null;
-                updateAuthUI();
-                loadCart(); 
-            });
-
-            supabase.auth.onAuthStateChange((event, session) => {
-                currentUser = session?.user ?? null;
-                updateAuthUI();
-                loadCart(); 
-                if (event === "SIGNED_IN" && currentUser) {
-                    loadUserOrders(); 
-                    setupRealtimeSubscriptionsForUser(currentUser.id); // Setup user-specific subscriptions
-                } else if (event === "SIGNED_OUT") {
-                    clearUserSpecificSubscriptions(); // Clear user-specific subscriptions
-                }
-            });
-        }
-        
-        function updateAuthUI() {
-            const authBtn = document.getElementById('authBtn');
-            const ordersBtn = document.getElementById('ordersBtn');
-            if (currentUser) {
-                authBtn.textContent = currentLanguage === 'my' ? 'ထွက်ရန်' : 'Logout';
-                authBtn.onclick = logout;
-                ordersBtn.style.display = 'block'; 
-            } else {
-                authBtn.textContent = currentLanguage === 'my' ? 'ဝင်ရောက်ရန်' : 'Login';
-                authBtn.onclick = openAuth;
-                ordersBtn.style.display = 'none';
-            }
-        }
-
-        async function openOrders() {
-            if (!currentUser) {
-                showMessage('info', 'ကျေးဇူးပြု၍ အရင် ဝင်ရောက်ပါ', 'Please login first');
-                openAuth();
-                return;
-            }
-            await loadUserOrders();
-            openModal('orderModal');
-        }
-
-        async function loadUserOrders() {
-            if (!supabase || !currentUser) {
-                document.getElementById('ordersList').innerHTML = `<div class="empty-state">${currentLanguage === 'my' ? 'မှာယူမှုများ ကြည့်ရန် ဝင်ရောက်ပါ' : 'Login to see your orders'}</div>`;
-                return;
-            }
-            try {
-                document.getElementById('ordersList').innerHTML = `<div class="loading-state"><div class="loading-spinner-small"></div> <p>${currentLanguage === 'my' ? 'မှာယူမှုများ ရယူနေသည်...' : 'Loading orders...'}</p></div>`;
-                const { data, error } = await supabase
-                    .from('orders')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: false });
-                if (error) throw error;
-                displayUserOrders(data || []);
-            } catch (error) {
-                console.error('Error loading orders:', error);
-                document.getElementById('ordersList').innerHTML = `<div class="empty-state">${currentLanguage === 'my' ? 'မှာယူမှုများ ရယူခြင်း မအောင်မြင်ပါ' : 'Failed to load orders'}</div>`;
-            }
-        }
-
-        function displayUserOrders(orders) {
-            const ordersList = document.getElementById('ordersList');
-            if (orders.length === 0) {
-                ordersList.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📦</div><p>${currentLanguage === 'my' ? 'မှာယူမှု မရှိသေးပါ' : 'No orders yet'}</p></div>`;
-                return;
-            }
-            ordersList.innerHTML = orders.map(order => `
-                <div class="order-card" style="border: 1px solid #e0e0e0; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem; background: white;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
-                        <h4>Order #${order.id}</h4>
-                        <span class="order-status status-${order.status}">${getStatusText(order.status)}</span>
-                    </div>
-                    <div style="margin-bottom: 1rem;"><strong>${currentLanguage === 'my' ? 'စုစုပေါင်း:' : 'Total:'}</strong> ${formatPrice(order.total_amount)}</div>
-                    <div style="margin-bottom: 1rem;"><strong>${currentLanguage === 'my' ? 'ရက်စွဲ:' : 'Date:'}</strong> ${formatDate(order.created_at)}</div>
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button class="btn btn-secondary" onclick="viewOrderDetails(${order.id})" style="font-size: 0.9rem;">${currentLanguage === 'my' ? 'အသေးစိတ်ကြည့်ရန်' : 'View Details'}</button>
-                        ${order.status === 'approved' ? `<button class="btn" onclick="requestRefund(${order.id})" style="font-size: 0.9rem; background: #ffc107; color: #212529;">${currentLanguage === 'my' ? 'ငွေပြန်အမ်းတောင်းရန်' : 'Request Refund'}</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function getStatusText(status) {
-            const statusTexts = {
-                'pending': {my: 'စောင့်ဆိုင်းနေသည်', en: 'Pending'},
-                'approved': {my: 'အတည်ပြုပြီး', en: 'Approved'},
-                'rejected': {my: 'ငြင်းပယ်ပြီး', en: 'Rejected'},
-                'refund_requested': {my: 'ငွေပြန်အမ်းတောင်းခံထား', en: 'Refund Requested'},
-                'refunded': {my: 'ငွေပြန်အမ်းပြီး', en: 'Refunded'}
-            };
-            return statusTexts[status] ? statusTexts[status][currentLanguage] : status;
-        }
-
-        async function requestRefund(orderId) {
-            if (!supabase) return;
-            const reason = prompt(currentLanguage === 'my' ? 'ငွေပြန်အမ်းရန် အကြောင်းရင်း ရေးပါ:' : 'Please enter refund reason:');
-            if (!reason) return;
-            try {
-                const { error } = await supabase.from('orders').update({ status: 'refund_requested', refund_reason: reason, refund_requested_at: new Date().toISOString() }).eq('id', orderId);
-                if (error) throw error;
-                showMessage('success', 'ငွေပြန်အမ်းတောင်းခံမှု အောင်မြင်စွာ တင်ပြီးပါပြီ', 'Refund request submitted successfully');
-                loadUserOrders();
-            } catch (error) {
-                console.error('Error requesting refund:', error);
-                showMessage('error', 'ငွေပြန်အမ်းတောင်းခံမှု မအောင်မြင်ပါ', 'Failed to request refund');
-            }
-        }
-
-        async function viewOrderDetails(orderId) {
-            if (!supabase) return;
-            try {
-                const { data, error } = await supabase.from('orders').select('*').eq('id', orderId).single();
-                if (error) throw error;
-                const itemsText = data.items.map(item => `${item.title} x${item.quantity} (${formatPrice(item.price * item.quantity)})`).join('\n');
-                alert(`Order #${data.id}\n\n${currentLanguage === 'my' ? 'အခြေအနေ:' : 'Status:'} ${getStatusText(data.status)}\n${currentLanguage === 'my' ? 'စုစုပေါင်း:' : 'Total:'} ${formatPrice(data.total_amount)}\n${currentLanguage === 'my' ? 'လိပ်စာ:' : 'Address:'} ${data.shipping_address}, ${data.shipping_city}\n${currentLanguage === 'my' ? 'ဖုန်း:' : 'Phone:'} ${data.shipping_phone}\n\n${currentLanguage === 'my' ? 'ပစ္စည်းများ:' : 'Items:'}\n${itemsText}`);
-            } catch (error) {
-                console.error('Error loading order details:', error);
-                showMessage('error', 'မှာယူမှု အသေးစိတ် ရယူခြင်း မအောင်မြင်ပါ', 'Failed to load order details');
-            }
-        }
-
-        // Product Functions
-        async function loadProducts() {
-            const grid = document.getElementById('productsGrid');
-            grid.innerHTML = `<div class="loading-state"><div class="loading-spinner-small"></div> <p data-en="Loading products..." data-my="ပစ္စည်းများ ရယူနေသည်...">ပစ္စည်းများ ရယူနေသည်...</p></div>`;
-            updateLanguageForElements(grid); 
-
-            if (supabase) {
-                try {
-                    const { data, error } = await supabase.from('products').select('*').eq('status', 'active').order('created_at', { ascending: false });
-                    if (error) throw error;
-                    products = data || [];
-                } catch (error) {
-                    console.error('Error loading products from Supabase:', error);
-                    showMessage('error', 'ဒေတာဘေ့စ်မှ ပစ္စည်းများ ရယူ၍မရပါ', 'Could not fetch products from database.');
-                    products = getSampleProducts(); 
-                }
-            } else {
-                products = getSampleProducts();
-            }
-            displayProducts(products);
-        }
-        
-        function getSampleProducts() {
-             return [
-                { id: 1, title: 'iPhone 15 Pro', title_en: 'iPhone 15 Pro', description: 'နောက်ဆုံးထွက် iPhone 15 Pro', description_en: 'Latest iPhone 15 Pro', price: 1500000, image_url: '/placeholder.svg?height=250&width=300', category: 'electronics' },
-                { id: 2, title: 'Samsung Galaxy S24', title_en: 'Samsung Galaxy S24', description: 'အမိုက်စား Samsung ဖုန်း', description_en: 'Amazing Samsung phone', price: 1200000, image_url: '/placeholder.svg?height=250&width=300', category: 'electronics' },
-                { id: 3, title: 'Nike Air Max', title_en: 'Nike Air Max', description: 'အမိုက်စား Nike ဖိနပ်', description_en: 'Amazing Nike shoes', price: 150000, image_url: '/placeholder.svg?height=250&width=300', category: 'fashion' },
-                { id: 4, title: 'MacBook Pro', title_en: 'MacBook Pro', description: 'Apple MacBook Pro လက်တော့ပ်', description_en: 'Apple MacBook Pro laptop', price: 2500000, image_url: '/placeholder.svg?height=250&width=300', category: 'electronics' }
-            ];
-        }
-
-        function displayProducts(productsToShow) {
-            const grid = document.getElementById('productsGrid');
-            if (productsToShow.length === 0) {
-                grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🛍️</div><p data-en="No products found" data-my="ပစ္စည်း မရှိသေးပါ">ပစ္စည်း မရှိသေးပါ</p></div>`;
-                 updateLanguageForElements(grid);
-                return;
-            }
-            grid.innerHTML = productsToShow.map(product => createProductCard(product)).join('');
-            updateLanguageForElements(grid);
-        }
-
-        function createProductCard(product) {
-            const title = currentLanguage === 'my' ? product.title : (product.title_en || product.title);
-            const description = currentLanguage === 'my' ? product.description : (product.description_en || product.description);
-            const imageUrl = product.image_url || `/placeholder.svg?height=200&width=300&text=${encodeURIComponent(title)}`;
-
-            return `
-                <div class="product-card">
-                    <img src="${imageUrl}" alt="${title}" class="product-image" onerror="this.src='/placeholder.svg?height=200&width=300&text=Image+Not+Found'">
-                    <div class="product-info">
-                        <h3 class="product-title">${title}</h3>
-                        <p class="product-description">${description.substring(0,100)}${description.length > 100 ? '...' : ''}</p>
-                        <div class="product-price">${formatPrice(product.price)}</div>
-                        <div class="product-actions">
-                            <button class="btn btn-primary" onclick="addToCart(${product.id})">
-                                🛒 <span data-en="Add to Cart" data-my="ခြင်းတောင်းထဲ ထည့်ရန်">ခြင်းတောင်းထဲ ထည့်ရန်</span>
+                    <div class="header-actions">
+                        <button class="btn-icon" id="refresh-data" title="Refresh Data">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="btn-icon" id="notifications" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
+                        <div class="user-menu">
+                            <button class="user-avatar" id="user-menu-toggle">
+                                <i class="fas fa-user"></i>
                             </button>
-                            <button class="btn btn-secondary" onclick="viewProduct(${product.id})">
-                                👁️ <span data-en="View" data-my="ကြည့်ရန်">ကြည့်ရန်</span>
-                            </button>
+                            <div class="user-dropdown" id="user-dropdown">
+                                <div class="user-info">
+                                    <span class="user-name">Sales Manager</span>
+                                    <span class="user-email">manager@company.com</span>
+                                </div>
+                                <hr>
+                                <a href="#profile"><i class="fas fa-user-cog"></i> Profile</a>
+                                <a href="#settings"><i class="fas fa-cog"></i> Settings</a>
+                                <hr>
+                                <a href="#logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                            </div>
                         </div>
                     </div>
-                </div>`;
-        }
+                </div>
+            </div>
+        </header>
 
-        // Cart Functions
-        function addToCart(productId) {
-            if (!currentUser && supabase) { 
-                showMessage('info', 'ကျေးဇူးပြု၍ အရင် ဝင်ရောက်ပါ', 'Please login first');
-                openAuth();
-                return;
-            }
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
-            const existingItem = cart.find(item => item.id === productId);
-            if (existingItem) existingItem.quantity++;
-            else cart.push({ ...product, quantity: 1 });
-            updateCartUI();
-            saveCart();
-            showMessage('success', 'ခြင်းတောင်းထဲ ထည့်ပြီးပါပြီ', 'Added to cart');
-        }
-        function removeFromCart(productId) {
-            cart = cart.filter(item => item.id !== productId);
-            updateCartUI();
-            saveCart();
-        }
-        function updateQuantity(productId, change) {
-            const item = cart.find(item => item.id === productId);
-            if (item) {
-                item.quantity += change;
-                if (item.quantity <= 0) removeFromCart(productId);
-                else { updateCartUI(); saveCart(); }
-            }
-        }
-        function updateCartUI() {
-            document.getElementById('cartCount').textContent = cart.reduce((sum, item) => sum + item.quantity, 0);
-            const cartItemsEl = document.getElementById('cartItems');
-            const cartTotalEl = document.getElementById('cartTotal');
-            if (cart.length === 0) {
-                cartItemsEl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🛒</div><p data-en="Cart is empty" data-my="ခြင်းတောင်း ဗလာဖြစ်နေပါတယ်">ခြင်းတောင်း ဗလာဖြစ်နေပါတယ်</p></div>`;
-                cartTotalEl.textContent = formatPrice(0);
-            } else {
-                cartItemsEl.innerHTML = cart.map(item => {
-                    const title = currentLanguage === 'my' ? item.title : (item.title_en || item.title);
-                    const imageUrl = item.image_url || `/placeholder.svg?height=60&width=60&text=${encodeURIComponent(title)}`;
-                    return `
-                    <div class="cart-item">
-                        <img src="${imageUrl}" alt="${title}" class="cart-item-image" onerror="this.src='/placeholder.svg?height=60&width=60&text=Img+Err'">
-                        <div class="cart-item-info">
-                            <div class="cart-item-title">${title}</div>
-                            <div class="cart-item-price">${formatPrice(item.price)}</div>
-                        </div>
-                        <div class="quantity-controls">
-                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
-                            <span class="quantity-display">${item.quantity}</span>
-                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
-                        </div>
-                        <button class="btn btn-secondary" onclick="removeFromCart(${item.id})" style="margin-left: 1rem; padding: 0.5rem;">🗑️</button>
-                    </div>`;
-                }).join('');
-                cartTotalEl.textContent = formatPrice(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0));
-            }
-            updateLanguageForElements(cartItemsEl.parentElement); 
-        }
-        function saveCart() {
-            if (currentUser && supabase) localStorage.setItem(`cart_${currentUser.id}`, JSON.stringify(cart));
-            else if (!supabase) localStorage.setItem('cart_guest', JSON.stringify(cart)); 
-        }
-        function loadCart() {
-            let savedCart = null;
-            if (currentUser && supabase) savedCart = localStorage.getItem(`cart_${currentUser.id}`);
-            else if (!supabase) savedCart = localStorage.getItem('cart_guest');
-            
-            if (savedCart) cart = JSON.parse(savedCart);
-            else cart = [];
-            updateCartUI();
-        }
-
-        // Checkout Functions
-        async function loadPaymentNumbers() {
-            if (!supabase) return;
-            try {
-                const { data, error } = await supabase.from('payment_settings').select('method, number').eq('is_active', true);
-                if (error) throw error;
-                data.forEach(setting => {
-                    if (paymentNumbers.hasOwnProperty(setting.method)) {
-                        paymentNumbers[setting.method] = setting.number;
-                    }
-                });
-            } catch (error) {
-                console.error("Error loading payment numbers:", error);
-                showMessage('error', 'ငွေပေးချေမှု နံပါတ်များ ရယူ၍မရပါ', 'Could not load payment numbers.');
-            }
-        }
-        function proceedToCheckout() {
-            if (cart.length === 0) {
-                showMessage('error', 'ခြင်းတောင်း ဗလာဖြစ်နေပါတယ်', 'Cart is empty');
-                return;
-            }
-            if (!currentUser && supabase) {
-                 showMessage('info', 'ကျေးဇူးပြု၍ အရင် ဝင်ရောက်ပါ', 'Please login to checkout');
-                openAuth();
-                return;
-            }
-            closeModal('cartModal');
-            openModal('checkoutModal');
-        }
-        function selectPaymentMethod(method) {
-            selectedPaymentMethod = method;
-            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
-            document.querySelector(`.payment-method[data-method="${method}"]`).classList.add('selected');
-            const paymentDetailsEl = document.getElementById('paymentDetails');
-            document.getElementById('paymentNumber').textContent = paymentNumbers[method] || (currentLanguage === 'my' ? 'နံပါတ်မရှိပါ' : 'Number not available');
-            document.getElementById('paymentAmount').textContent = formatPrice(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0));
-            paymentDetailsEl.style.display = 'block';
-            updateLanguageForElements(paymentDetailsEl);
-        }
-        function handleReceiptUpload(input) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    document.getElementById('receiptPreview').innerHTML = `
-                        <div style="margin-top: 1rem;">
-                            <img src="${e.target.result}" alt="Receipt" style="max-width: 100%; height: auto; border-radius: 10px; max-height: 200px;">
-                            <p style="text-align: center; margin-top: 0.5rem; color: green;" data-en="✅ Receipt uploaded" data-my="✅ ပြေစာ တင်ပြီးပါပြီ">✅ ပြေစာ တင်ပြီးပါပြီ</p>
-                        </div>`;
-                    updateLanguageForElements(document.getElementById('receiptPreview'));
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-        async function submitOrder() {
-            if (!supabase) {
-                showMessage('error', 'ဒေတာဘေ့စ် ချိတ်ဆက်၍ မှာယူမှု မပြုလုပ်နိုင်ပါ', 'Cannot submit order without database connection.');
-                return;
-            }
-            if (!currentUser) { // Should not happen if proceedToCheckout is called correctly
-                showMessage('error', 'မှာယူမှုပြုလုပ်ရန် ကျေးဇူးပြု၍ ဝင်ရောက်ပါ', 'Please login to submit an order.');
-                return;
-            }
-            const shippingName = document.getElementById('shippingName').value.trim();
-            const shippingPhone = document.getElementById('shippingPhone').value.trim();
-            const shippingAddress = document.getElementById('shippingAddress').value.trim();
-            const shippingCity = document.getElementById('shippingCity').value.trim();
-            const receiptFile = document.getElementById('receiptFile').files[0];
-
-            if (!shippingName || !shippingPhone || !shippingAddress || !shippingCity) {
-                showMessage('error', 'ကျေးဇူးပြု၍ လိပ်စာ အချက်လက်အားလုံး ဖြည့်ပါ', 'Please fill all address fields'); return;
-            }
-            if (!selectedPaymentMethod) {
-                showMessage('error', 'ကျေးဇူးပြု၍ ငွေပေးချေမှု နည်းလမ်း ရွေးပါ', 'Please select payment method'); return;
-            }
-            if (!receiptFile) {
-                showMessage('error', 'ကျေးဇူးပြု၍ ငွေလွှဲပြေစာ တင်ပါ', 'Please upload payment receipt'); return;
-            }
-
-            try {
-                const fileExt = receiptFile.name.split('.').pop();
-                const fileName = `receipts/${currentUser.id}_${Date.now()}.${fileExt}`;
-                const { data: uploadData, error: uploadError } = await supabase.storage.from('receipts').upload(fileName, receiptFile);
-                if (uploadError) throw uploadError;
-
-                const { data: publicURLData } = supabase.storage.from('receipts').getPublicUrl(fileName);
-
-                const orderData = {
-                    user_id: currentUser.id,
-                    items: cart.map(p => ({id: p.id, title: p.title, title_en: p.title_en, quantity: p.quantity, price: p.price, image_url: p.image_url})), 
-                    total_amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-                    shipping_name: shippingName, shipping_phone: shippingPhone, shipping_address: shippingAddress, shipping_city: shippingCity,
-                    payment_method: selectedPaymentMethod, payment_number: paymentNumbers[selectedPaymentMethod],
-                    receipt_url: publicURLData.publicUrl, status: 'pending'
-                };
-                const { error: orderError } = await supabase.from('orders').insert([orderData]);
-                if (orderError) throw orderError;
-
-                cart = []; updateCartUI(); saveCart();
-                closeModal('checkoutModal');
-                showMessage('success', 'မှာယူမှု အောင်မြင်စွာ တင်ပြီးပါပြီ', 'Order submitted successfully');
-                document.getElementById('checkoutModal').querySelectorAll('input, textarea').forEach(input => input.value = '');
-                document.getElementById('paymentDetails').style.display = 'none';
-                document.getElementById('receiptPreview').innerHTML = '';
-                selectedPaymentMethod = null;
-                document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
-            } catch (error) {
-                console.error('Order submission error:', error);
-                showMessage('error', 'မှာယူမှု တင်ခြင်း မအောင်မြင်ပါ: ' + error.message, 'Order submission failed: ' + error.message);
-            }
-        }
-
-        // Posts Functions
-        async function loadPosts() {
-            const grid = document.getElementById('postsGrid');
-            grid.innerHTML = `<div class="loading-state"><div class="loading-spinner-small"></div> <p data-en="Loading posts..." data-my="ပို့စ်များ ရယူနေသည်...">ပို့စ်များ ရယူနေသည်...</p></div>`;
-            updateLanguageForElements(grid);
-
-            if (supabase) {
-                try {
-                    const { data, error } = await supabase.from('posts').select('*').eq('status', 'active').order('created_at', { ascending: false });
-                    if (error) throw error;
-                    posts = data || [];
-                } catch (error) {
-                    console.error('Error loading posts from Supabase:', error);
-                    showMessage('error', 'ဒေတာဘေ့စ်မှ ပို့စ်များ ရယူ၍မရပါ', 'Could not fetch posts from database.');
-                    posts = getSamplePosts(); 
-                }
-            } else {
-                posts = getSamplePosts();
-            }
-            displayPosts(posts);
-        }
-
-        function getSamplePosts() {
-            return [
-                { id: 1, title: 'ကြိုဆိုပါတယ်', title_en: 'Welcome', content: 'ကျွန်ုပ်တို့၏ အွန်လိုင်း ဈေးဆိုင်သို့ ကြိုဆိုပါတယ်', content_en: 'Welcome to our online store', media_url: '/placeholder.svg?height=200&width=350', media_type: 'image', created_at: new Date().toISOString() },
-                { id: 2, title: 'အသစ်ထွက် ပစ္စည်းများ', title_en: 'New Products', content: 'ဒီလမှာ အသစ်ထွက် ပစ္စည်းများ ရောက်ရှိလာပါပြီ', content_en: 'New products arrived this month', media_url: '/placeholder.svg?height=200&width=350', media_type: 'image', created_at: new Date().toISOString() }
-            ];
-        }
-        function displayPosts(postsToShow) {
-            const grid = document.getElementById('postsGrid');
-            if (postsToShow.length === 0) {
-                grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📝</div><p data-en="No posts found" data-my="ပို့စ် မရှိသေးပါ">ပို့စ် မရှိသေးပါ</p></div>`;
-                 updateLanguageForElements(grid);
-                return;
-            }
-            grid.innerHTML = postsToShow.map(post => createPostCard(post)).join('');
-            updateLanguageForElements(grid);
-        }
-        function createPostCard(post) {
-            const title = currentLanguage === 'my' ? post.title : (post.title_en || post.title);
-            const content = currentLanguage === 'my' ? post.content : (post.content_en || post.content);
-            const mediaUrl = post.media_url || `/placeholder.svg?height=200&width=350&text=${encodeURIComponent(title)}`;
-            let mediaElement = '';
-            if (mediaUrl) {
-                if (post.media_type === 'video') {
-                    mediaElement = `<video src="${mediaUrl}" class="post-media" controls muted onerror="this.style.display='none'"></video>`;
-                } else {
-                    mediaElement = `<img src="${mediaUrl}" alt="${title}" class="post-media" onerror="this.src='/placeholder.svg?height=200&width=350&text=Img+Err'">`;
-                }
-            }
-            return `
-                <div class="post-card">
-                    ${mediaElement}
-                    <div class="post-content">
-                        <h3 class="post-title">${title}</h3>
-                        <p class="post-text">${content.substring(0,150)}${content.length > 150 ? '...' : ''}</p>
-                        <div class="post-time">${formatDate(post.created_at)}</div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="content-section active">
+                <div class="section-header">
+                    <h1>Dashboard Overview</h1>
+                    <div class="date-filter">
+                        <select id="dashboard-period">
+                            <option value="7">Last 7 days</option>
+                            <option value="30" selected>Last 30 days</option>
+                            <option value="90">Last 3 months</option>
+                            <option value="365">Last year</option>
+                        </select>
                     </div>
-                </div>`;
-        }
+                </div>
 
-        // Search and Filter Functions
-        function searchProducts() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            const activeCategory = document.querySelector('.category-btn.active').dataset.category;
-            
-            let filtered = products;
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon">
+                            <i class="fas fa-users text-blue"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <h3>Competitors Tracked</h3>
+                            <div class="kpi-value" id="total-competitors">-</div>
+                            <div class="kpi-change positive">+2 this month</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">
+                            <i class="fas fa-box text-green"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <h3>Products Monitored</h3>
+                            <div class="kpi-value" id="total-products">-</div>
+                            <div class="kpi-change positive">+15 this week</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">
+                            <i class="fas fa-chart-line text-purple"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <h3>Price Changes</h3>
+                            <div class="kpi-value" id="price-changes">-</div>
+                            <div class="kpi-change negative">-3% avg price</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">
+                            <i class="fas fa-exclamation-triangle text-orange"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <h3>Market Alerts</h3>
+                            <div class="kpi-value" id="market-alerts">-</div>
+                            <div class="kpi-change neutral">5 new today</div>
+                        </div>
+                    </div>
+                </div>
 
-            if (activeCategory !== 'all') {
-                filtered = filtered.filter(product => product.category === activeCategory);
-            }
+                <!-- Charts Row -->
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Price Trends Overview</h3>
+                            <div class="chart-controls">
+                                <select id="price-trend-category">
+                                    <option value="all">All Categories</option>
+                                    <option value="software">Software</option>
+                                    <option value="hardware">Hardware</option>
+                                    <option value="services">Services</option>
+                                </select>
+                            </div>
+                        </div>
+                        <canvas id="price-trends-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3>Market Share Distribution</h3>
+                        </div>
+                        <canvas id="market-share-chart"></canvas>
+                    </div>
+                </div>
 
-            if (searchTerm) {
-                filtered = filtered.filter(product =>
-                    (currentLanguage === 'my' ? product.title : (product.title_en || product.title)).toLowerCase().includes(searchTerm) ||
-                    (currentLanguage === 'my' ? product.description : (product.description_en || product.description)).toLowerCase().includes(searchTerm)
-                );
-            }
-            displayProducts(filtered);
-        }
-        function setupCategoryFilters() {
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    searchProducts(); 
-                });
-            });
-        }
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list" id="activity-list">
+                        <!-- Activities will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
 
-        // Language Functions
-        function toggleLanguage() {
-            currentLanguage = currentLanguage === 'my' ? 'en' : 'my';
-            document.getElementById('langToggle').textContent = currentLanguage === 'my' ? 'EN' : 'မြန်မာ';
-            updateLanguage();
-        }
-        function updateLanguage() {
-            updateLanguageForElements(document.body); 
-            displayProducts(products);
-            displayPosts(posts);
-            updateCartUI(); 
-            if (document.getElementById('orderModal').classList.contains('show')) {
-                loadUserOrders(); 
-            }
-            updateAuthUI();
-        }
-        function updateLanguageForElements(container) {
-            container.querySelectorAll('[data-en]').forEach(el => {
-                el.textContent = el.dataset[currentLanguage];
-            });
-            container.querySelectorAll('[data-en-placeholder]').forEach(el => {
-                el.placeholder = el.dataset[currentLanguage + 'Placeholder'];
-            });
-        }
+            <!-- Competitors Section -->
+            <section id="competitors-section" class="content-section">
+                <div class="section-header">
+                    <h1>Competitor Analysis</h1>
+                    <button class="btn btn-primary" id="add-competitor">
+                        <i class="fas fa-plus"></i>
+                        Add Competitor
+                    </button>
+                </div>
 
-        // Modal Functions
-        function openModal(modalId) { document.getElementById(modalId).classList.add('show'); document.body.style.overflow = 'hidden'; updateLanguageForElements(document.getElementById(modalId)); }
-        function closeModal(modalId) { document.getElementById(modalId).classList.remove('show'); document.body.style.overflow = 'auto'; }
-        function openAuth() { if (currentUser && supabase) logout(); else openModal('authModal'); }
-        function openCart() {
-            if (!currentUser && supabase) {
-                showMessage('info', 'ကျေးဇူးပြု၍ အရင် ဝင်ရောက်ပါ', 'Please login first');
-                openAuth();
-                return;
-            }
-            openModal('cartModal');
-        }
-        function showLogin() {
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('authTitle').dataset.en = "Login";
-            document.getElementById('authTitle').dataset.my = "ဝင်ရောက်ရန်";
-            updateLanguageForElements(document.getElementById('authModal'));
-        }
-        function showRegister() {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-            document.getElementById('authTitle').dataset.en = "Register";
-            document.getElementById('authTitle').dataset.my = "စာရင်းသွင်းရန်";
-            updateLanguageForElements(document.getElementById('authModal'));
-        }
+                <!-- Competitor Filters -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label>Industry:</label>
+                        <select id="industry-filter">
+                            <option value="">All Industries</option>
+                            <option value="Software">Software</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Services">Services</option>
+                            <option value="E-commerce">E-commerce</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Company Size:</label>
+                        <select id="size-filter">
+                            <option value="">All Sizes</option>
+                            <option value="Small">Small (1-50)</option>
+                            <option value="Medium">Medium (51-200)</option>
+                            <option value="Large">Large (201-1000)</option>
+                            <option value="Enterprise">Enterprise (1000+)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Status:</label>
+                        <select id="status-filter">
+                            <option value="">All</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
 
-        // Utility Functions
-        function formatPrice(price) { return new Intl.NumberFormat(currentLanguage === 'my' ? 'my-MM' : 'en-US').format(price || 0) + (currentLanguage === 'my' ? ' ကျပ်' : ' MMK'); }
-        function formatDate(dateString) { return dateString ? new Date(dateString).toLocaleDateString(currentLanguage === 'my' ? 'my-MM' : 'en-CA') : 'N/A'; } 
-        function showMessage(type, messageMy, messageEn) {
-            const message = currentLanguage === 'my' ? messageMy : messageEn;
-            const messageEl = document.createElement('div');
-            messageEl.className = `message ${type}`;
-            messageEl.textContent = message;
-            document.getElementById('messageContainer').appendChild(messageEl);
-            setTimeout(() => { if (messageEl.parentNode) messageEl.remove(); }, 5000);
-        }
-        function viewProduct(productId) {
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
-            const title = currentLanguage === 'my' ? product.title : (product.title_en || product.title);
-            const description = currentLanguage === 'my' ? product.description : (product.description_en || product.description);
-            alert(`${title}\n\n${description}\n\n${formatPrice(product.price)}`);
-        }
+                <!-- Competitors Grid -->
+                <div class="competitors-grid" id="competitors-grid">
+                    <!-- Competitor cards will be populated by JavaScript -->
+                </div>
+            </section>
 
-        // Real-time subscriptions
-        let productsChannel, postsChannel, paymentSettingsChannel, userOrdersChannel;
+            <!-- Pricing Section -->
+            <section id="pricing-section" class="content-section">
+                <div class="section-header">
+                    <h1>Pricing Analysis</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="export-pricing">
+                            <i class="fas fa-download"></i>
+                            Export Data
+                        </button>
+                        <button class="btn btn-primary" id="add-product">
+                            <i class="fas fa-plus"></i>
+                            Add Product
+                        </button>
+                    </div>
+                </div>
 
-        function clearUserSpecificSubscriptions() {
-            if (userOrdersChannel) {
-                supabase.removeChannel(userOrdersChannel);
-                userOrdersChannel = null;
-                console.log('User orders channel removed.');
-            }
-        }
-        
-        function setupRealtimeSubscriptionsForUser(userId) {
-            if (!supabase || !userId) return;
-            clearUserSpecificSubscriptions(); // Remove previous user's channel if any
+                <!-- Pricing Filters -->
+                <div class="filters-bar">
+                    <div class="filter-group">
+                        <label>Category:</label>
+                        <select id="pricing-category-filter">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Price Range:</label>
+                        <select id="price-range-filter">
+                            <option value="">All Prices</option>
+                            <option value="0-100">$0 - $100</option>
+                            <option value="100-500">$100 - $500</option>
+                            <option value="500-1000">$500 - $1,000</option>
+                            <option value="1000+">$1,000+</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Competitor:</label>
+                        <select id="competitor-filter">
+                            <option value="">All Competitors</option>
+                        </select>
+                    </div>
+                </div>
 
-            userOrdersChannel = supabase.channel(`public:orders:user_id=eq.${userId}`)
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` }, (payload) => {
-                    console.log('User order change:', payload);
-                    loadUserOrders();
-                }).subscribe((status) => {
-                    if (status === 'SUBSCRIBED') console.log(`Subscribed to orders for user ${userId}`);
-                });
-        }
+                <!-- Pricing Table -->
+                <div class="table-container">
+                    <table class="data-table" id="pricing-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Competitor</th>
+                                <th>Category</th>
+                                <th>Current Price</th>
+                                <th>Previous Price</th>
+                                <th>Change</th>
+                                <th>Market Share</th>
+                                <th>Last Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pricing-table-body">
+                            <!-- Pricing data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
+            <!-- Market Trends Section -->
+            <section id="trends-section" class="content-section">
+                <div class="section-header">
+                    <h1>Market Trends</h1>
+                    <button class="btn btn-primary" id="add-trend">
+                        <i class="fas fa-plus"></i>
+                        Add Trend
+                    </button>
+                </div>
 
-        function setupGlobalRealtimeSubscriptions() {
-            if (!supabase) return;
+                <!-- Trend Cards -->
+                <div class="trends-grid" id="trends-grid">
+                    <!-- Trend cards will be populated by JavaScript -->
+                </div>
 
-            if (productsChannel) supabase.removeChannel(productsChannel);
-            productsChannel = supabase.channel('public:products')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
-                    console.log('Products change:', payload);
-                    loadProducts();
-                }).subscribe();
+                <!-- Trend Analysis Chart -->
+                <div class="chart-container full-width">
+                    <div class="chart-header">
+                        <h3>Trend Analysis Over Time</h3>
+                        <div class="chart-controls">
+                            <select id="trend-timeframe">
+                                <option value="30">Last 30 days</option>
+                                <option value="90">Last 3 months</option>
+                                <option value="365">Last year</option>
+                            </select>
+                        </div>
+                    </div>
+                    <canvas id="trends-chart"></canvas>
+                </div>
+            </section>
 
-            if (postsChannel) supabase.removeChannel(postsChannel);
-            postsChannel = supabase.channel('public:posts')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, (payload) => {
-                    console.log('Posts change:', payload);
-                    loadPosts();
-                }).subscribe();
-            
-            if (paymentSettingsChannel) supabase.removeChannel(paymentSettingsChannel);
-            paymentSettingsChannel = supabase.channel('public:payment_settings')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'payment_settings' }, (payload) => {
-                    console.log('Payment settings change:', payload);
-                    loadPaymentNumbers();
-                }).subscribe();
-        }
-        
-        if (supabase) {
-            setupGlobalRealtimeSubscriptions();
-        }
+            <!-- Reports Section -->
+            <section id="reports-section" class="content-section">
+                <div class="section-header">
+                    <h1>Reports & Analytics</h1>
+                    <button class="btn btn-primary" id="generate-report">
+                        <i class="fas fa-chart-bar"></i>
+                        Generate Report
+                    </button>
+                </div>
 
-    </script>
+                <!-- Report Templates -->
+                <div class="report-templates">
+                    <h3>Quick Reports</h3>
+                    <div class="templates-grid">
+                        <div class="template-card" data-template="competitor-analysis">
+                            <i class="fas fa-users"></i>
+                            <h4>Competitor Analysis</h4>
+                            <p>Comprehensive competitor comparison report</p>
+                        </div>
+                        <div class="template-card" data-template="price-comparison">
+                            <i class="fas fa-dollar-sign"></i>
+                            <h4>Price Comparison</h4>
+                            <p>Product pricing analysis across competitors</p>
+                        </div>
+                        <div class="template-card" data-template="market-overview">
+                            <i class="fas fa-chart-pie"></i>
+                            <h4>Market Overview</h4>
+                            <p>Market trends and opportunities analysis</p>
+                        </div>
+                        <div class="template-card" data-template="custom">
+                            <i class="fas fa-cog"></i>
+                            <h4>Custom Report</h4>
+                            <p>Build your own custom analytics report</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saved Reports -->
+                <div class="saved-reports">
+                    <h3>Saved Reports</h3>
+                    <div class="reports-list" id="reports-list">
+                        <!-- Saved reports will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Competitor Modal -->
+    <div id="add-competitor-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Competitor</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="add-competitor-form">
+                <div class="form-group">
+                    <label for="company-name">Made Im OPPER *</label>
+                    <input type="text" id="company-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="company-website">Website</label>
+                    <input type="url" id="company-website" placeholder="https://oppershopmm.netlify.app/">
+                </div>
+                <div class="form-group">
+                    <label for="company-industry">Industry *</label>
+                    <select id="company-industry" required>
+                        <option value="">Select Industry</option>
+                        <option value="Software">Software</option>
+                        <option value="Hardware">Hardware</option>
+                        <option value="Services">Services</option>
+                        <option value="E-commerce">E-commerce</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="company-size">Company Size</label>
+                    <select id="company-size">
+                        <option value="">Select Size</option>
+                        <option value="Small">Small (1-50)</option>
+                        <option value="Medium">Medium (51-200)</option>
+                        <option value="Large">Large (201-1000)</option>
+                        <option value="Enterprise">Enterprise (1000+)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="company-logo">Logo URL</label>
+                    <input type="url" id="company-logo" placeholder="https://example.com/logo.png">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Competitor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div id="add-product-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Product</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="add-product-form">
+                <div class="form-group">
+                    <label for="product-name">Product Name *</label>
+                    <input type="text" id="product-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-description">Description</label>
+                    <textarea id="product-description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="product-category">Category *</label>
+                    <input type="text" id="product-category" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-company">Competitor *</label>
+                    <select id="product-company" required>
+                        <option value="">Select Competitor</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-price">Price *</label>
+                        <input type="number" id="product-price" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="product-currency">Currency</label>
+                        <select id="product-currency">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="product-market-share">Market Share (%)</label>
+                    <input type="number" id="product-market-share" step="0.01" min="0" max="100">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
 </body>
 </html>
